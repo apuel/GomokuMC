@@ -1,0 +1,11 @@
+name: GomokuMC
+main: org.us._42.laphicet.gomoku.minecraft.GomokuMC
+version: 0.0.1
+author: apuel & mlu
+
+commands:
+  test:
+    description: test
+    usage: /test
+    permission: gomoku.test
+    permission-message: You don't have access to this command!
