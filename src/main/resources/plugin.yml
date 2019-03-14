@@ -9,3 +9,10 @@ commands:
     usage: /test
     permission: gomoku.test
     permission-message: You don't have access to this command!
+
+  startgame:
+    description: To start game
+    usage: /startgame
+    permission: gomoku.startgame
+    permission-message: You don't have access to this command!
+    
