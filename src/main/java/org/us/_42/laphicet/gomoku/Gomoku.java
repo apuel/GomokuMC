@@ -163,13 +163,10 @@ public class Gomoku {
 	/**
 	 * Gets the winning PlayerController.
 	 * 
-	 * @return The winning PlayerController.
+	 * @return The winning player's token value.
 	 */
-	public PlayerController getWinner() {
-		if (this.winner > 0) {
-			return (this.players[this.winner - 1]);
-		}
-		return (null);
+	public int getWinner() {
+		return (this.winner);
 	}
 	
 	/**
@@ -600,7 +597,7 @@ public class Gomoku {
 		int pcount = 0;
 		for (int i = 1; ; i++) {
 			int token = this.getToken(x - (dx * i), y - (dy * i));
-			if (token < 0 || (token != 0 && token != value)) {
+			if ((token < 0) || ((token != 0) && (token != value)) || this.isCaptured(x + (dx * i), y + (dy * i), value)) {
 				if (!pspaced) {
 					return (false);
 				}
@@ -628,7 +625,7 @@ public class Gomoku {
 		int ncount = 0;
 		for (int i = 1; ; i++) {
 			int token = this.getToken(x + (dx * i), y + (dy * i));
-			if (token < 0 || (token != 0 && token != value)) {
+			if ((token < 0) || ((token != 0) && (token != value)) || this.isCaptured(x + (dx * i), y + (dy * i), value)) {
 				if (!nspaced) {
 					return (false);
 				}
@@ -905,7 +902,6 @@ public class Gomoku {
 				}
 				this.players[i] = players[i];
 				this.set.add(players[i]);
-				players[i].gameStart(this, i + 1);
 			}
 		}
 	}

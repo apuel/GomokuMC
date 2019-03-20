@@ -18,9 +18,14 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.RenderType;
+import org.bukkit.scoreboard.Scoreboard;
 import org.us._42.laphicet.gomoku.GameStateReporter;
 import org.us._42.laphicet.gomoku.Gomoku;
 import org.us._42.laphicet.gomoku.PlayerController;
@@ -33,8 +38,12 @@ public class GomokuInstance implements GameStateReporter, Listener {
 	private Location origin;
 	private Player[] players = new Player[2];
 	
+	private Scoreboard scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+	private Objective captures = this.scoreboard.registerNewObjective("Captures", "dummy", "Captures", RenderType.INTEGER);
+	
 	private static class MCPlayer implements PlayerController {
 		Player player;
+
 		int x = -1;
 		int y = -1;
 		
@@ -44,7 +53,7 @@ public class GomokuInstance implements GameStateReporter, Listener {
 		
 		@Override
 		public String name(Gomoku game, int value) {
-			return (player.getDisplayName());
+			return (player.getDisplayName() + ChatColor.RESET);
 		}
 		
 		@Override
@@ -82,45 +91,60 @@ public class GomokuInstance implements GameStateReporter, Listener {
 		this.origin = origin;
 		this.players[0] = one;
 		this.players[1] = two;
+		
+		this.captures.setDisplaySlot(DisplaySlot.SIDEBAR);
+		this.captures.getScore(one.getName()).setScore(0);
+		this.captures.getScore(two.getName()).setScore(0);
+		one.setScoreboard(this.scoreboard);
+		two.setScoreboard(this.scoreboard);
+	}
+	
+	private void victorySequence(int winner) {
+		HandlerList.unregisterAll(this);
+		for (Player player : this.players) {
+			this.plugin.games.remove(player);
+			player.sendTitle(this.game.getPlayerController(winner).name(this.game, winner) + " has won!", "", 10, 70, 20);
+			player.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+		}
+		
+		new BukkitRunnable() {
+			Random rng = new Random();
+			int i;
+			
+			@Override
+			public void run() {
+				Location location = GomokuInstance.this.origin.getBlock().getLocation().add(
+					(Gomoku.BOARD_LENGTH * rng.nextDouble()) - (Gomoku.BOARD_LENGTH / 2),
+					1,
+					(Gomoku.BOARD_LENGTH * rng.nextDouble()) - (Gomoku.BOARD_LENGTH / 2)
+				);
+				Firework firework = location.getWorld().spawn(location, Firework.class);
+				FireworkMeta meta = firework.getFireworkMeta();
+				meta.addEffect(FireworkEffect.builder()
+					.withColor(Color.fromRGB(rng.nextInt(0x1000000)))
+					.trail(true)
+					.withFade(Color.fromRGB(rng.nextInt(0x1000000)))
+				.build());
+				meta.setPower(1);
+				firework.setFireworkMeta(meta);
+				
+				if (++i == 10) {
+					this.cancel();
+				}
+			}
+		}.runTaskTimer(this.plugin, 0, 10);
 	}
 	
 	@Override
 	public void logTurn(Gomoku game, Collection<String> logs) {
-		logs.forEach(Bukkit::broadcastMessage);
+		logs.forEach(this.players[0]::sendMessage);
+		logs.forEach(this.players[1]::sendMessage);
+		this.captures.getScore(this.players[0].getName()).setScore(game.getCaptureCount(1));
+		this.captures.getScore(this.players[1].getName()).setScore(game.getCaptureCount(2));
 		
-		PlayerController winner = game.getWinner();
-		if (winner != null) {
-			HandlerList.unregisterAll(this);
-			for (Player player : this.players) {
-				this.plugin.games.remove(player);
-			}
-			
-			new BukkitRunnable() {
-				Random rng = new Random();
-				int i;
-
-				@Override
-				public void run() {
-					Location location = GomokuInstance.this.origin.getBlock().getLocation().add(
-						(Gomoku.BOARD_LENGTH * rng.nextDouble()) - (Gomoku.BOARD_LENGTH / 2),
-						1,
-						(Gomoku.BOARD_LENGTH * rng.nextDouble()) - (Gomoku.BOARD_LENGTH / 2)
-					);
-					Firework firework = location.getWorld().spawn(location, Firework.class);
-					FireworkMeta meta = firework.getFireworkMeta();
-					meta.addEffect(FireworkEffect.builder()
-						.withColor(Color.fromRGB(rng.nextInt(0x1000000)))
-						.trail(true)
-						.withFade(Color.fromRGB(rng.nextInt(0x1000000)))
-					.build());
-					meta.setPower(2);
-					firework.setFireworkMeta(meta);
-					
-					if (++i == 10) {
-						this.cancel();
-					}
-				}
-			}.runTaskTimer(this.plugin, 0, 10);
+		int winner = game.getWinner();
+		if (winner > 0) {
+			this.victorySequence(winner);
 		}
 	}
 	
@@ -185,6 +209,23 @@ public class GomokuInstance implements GameStateReporter, Listener {
 			controller.y = block.getZ() - (origin.getBlockZ() - GomokuMC.BOARD_OFFSET);
 			this.game.next();
 			event.setCancelled(true);
+		}
+	}
+	
+	@EventHandler
+	public void onPlayerQuit(PlayerQuitEvent event) {
+		if (event.getPlayer().equals(this.players[0])) {
+			this.players[1].sendMessage(this.players[0].getDisplayName() + ChatColor.RESET + "has forfeited.");
+			this.players[1].sendMessage(this.players[1].getDisplayName() + ChatColor.RESET + "has won.");
+			this.victorySequence(2);
+		}
+		else if (event.getPlayer().equals(this.players[1])) {
+			this.players[1].sendMessage(this.players[1].getDisplayName() + ChatColor.RESET + "has forfeited.");
+			this.players[1].sendMessage(this.players[0].getDisplayName() + ChatColor.RESET + "has won.");
+			this.victorySequence(1);
+		}
+		else {
+			return;
 		}
 	}
 }

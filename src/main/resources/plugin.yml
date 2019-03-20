@@ -6,7 +6,17 @@ api-version: 1.13
 
 commands:
   startgame:
-    description: To start game
-    usage: /startgame
+    description: Starts a Gomoku session.
+    usage: /startgame <player1> <player2>
     permission: gomoku.startgame
+    permission-message: You don't have access to this command!
+  forfeit:
+    description: Forfeits from the current Gomoku session.
+    usage: /forfeit
+    permission: gomoku.forfeit
+    permission-message: You don't have access to this command!
+  ff:
+    description: Forfeits from the current Gomoku session.
+    usage: /ff
+    permission: gomoku.forfeit
     permission-message: You don't have access to this command!

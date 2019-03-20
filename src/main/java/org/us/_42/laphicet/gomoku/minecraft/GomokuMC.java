@@ -10,6 +10,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.us._42.laphicet.gomoku.Gomoku;
 
@@ -60,16 +61,15 @@ public class GomokuMC extends JavaPlugin {
 					return (true);
 				}
 				
-				if (games.containsKey(player1) || games.containsKey(player2)) {
+				if (this.games.containsKey(player1) || this.games.containsKey(player2)) {
 					sender.sendMessage(ChatColor.RED + "One or more players already in game.");
 					return (true);
 				}
 				
-				Location origin = ((Player)sender).getLocation();
-				origin.add(0, -1, 0);
+				Location origin = ((Player)sender).getLocation().add(0, -1, 0).getBlock().getLocation();
 				GomokuInstance newGame = new GomokuInstance(this, origin, player1, player2);
-				games.put(player1, newGame);
-				games.put(player2, newGame);
+				this.games.put(player1, newGame);
+				this.games.put(player2, newGame);
 				
 				// Generate board
 				for (int x = 0; x < BOARD_SIZE; x++) {
@@ -86,7 +86,23 @@ public class GomokuMC extends JavaPlugin {
 				}
 				
 				Bukkit.getPluginManager().registerEvents(newGame, this);
+				player1.sendMessage(ChatColor.YELLOW + "It is " + player1.getDisplayName() + ChatColor.RESET + ChatColor.YELLOW + "'s turn.");
+				player2.sendMessage(ChatColor.YELLOW + "It is " + player1.getDisplayName() + ChatColor.RESET + ChatColor.YELLOW + "'s turn.");
 			}
+			return (true);
+		}
+		if (command.getName().contentEquals("forfeit") || command.getName().contentEquals("ff")) {
+			if (sender instanceof Player) {
+				GomokuInstance game = this.games.get(sender);
+				if (game != null) {
+					PlayerQuitEvent event = new PlayerQuitEvent((Player)sender, "Forfeited Gomoku.");
+					game.onPlayerQuit(event);
+				}
+				else {
+					sender.sendMessage(ChatColor.RED + "You are not in a game!");
+				}
+			}
+			return (true);
 		}
 		return (false);
 	}
