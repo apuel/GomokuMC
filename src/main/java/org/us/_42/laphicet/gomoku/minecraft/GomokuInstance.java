@@ -99,6 +99,21 @@ public class GomokuInstance implements GameStateReporter, Listener {
 		two.setScoreboard(this.scoreboard);
 	}
 	
+	public void generate() {
+		for (int x = 0; x < GomokuMC.BOARD_SIZE; x++) {
+			for (int z = 0; z < GomokuMC.BOARD_SIZE; z++) {
+				if (x == 0 || z == 0 || x == 20 || z == 20) {
+					this.origin.getWorld().getBlockAt(this.origin.getBlockX() + x - GomokuMC.BOARD_OFFSET - 1, this.origin.getBlockY() + 1, this.origin.getBlockZ() + z - GomokuMC.BOARD_OFFSET - 1).setType(Material.AIR);
+					this.origin.getWorld().getBlockAt(this.origin.getBlockX() + x - GomokuMC.BOARD_OFFSET - 1, this.origin.getBlockY(), this.origin.getBlockZ() + z - GomokuMC.BOARD_OFFSET - 1).setType(GomokuMC.BOARD_BORDER);
+				}
+				else {
+					this.origin.getWorld().getBlockAt(this.origin.getBlockX() + x - GomokuMC.BOARD_OFFSET - 1, this.origin.getBlockY() + 1, this.origin.getBlockZ() + z - GomokuMC.BOARD_OFFSET - 1).setType(Material.AIR);
+					this.origin.getWorld().getBlockAt(this.origin.getBlockX() + x - GomokuMC.BOARD_OFFSET - 1, this.origin.getBlockY(), this.origin.getBlockZ() + z - GomokuMC.BOARD_OFFSET - 1).setType(GomokuMC.BOARD_MATERIAL);
+				}
+			}
+		}
+	}
+	
 	private void victorySequence(int winner) {
 		HandlerList.unregisterAll(this);
 		for (Player player : this.players) {

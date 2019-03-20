@@ -2,6 +2,7 @@ package org.us._42.laphicet.gomoku.minecraft;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -19,8 +20,8 @@ import net.md_5.bungee.api.ChatColor;
 public class GomokuMC extends JavaPlugin {
 	public Map<Player, GomokuInstance> games = new HashMap<Player, GomokuInstance>();
 	
-	private static final Material BOARD_BORDER = Material.BLACK_CONCRETE;
-	private static final Material BOARD_MATERIAL = Material.DRIED_KELP_BLOCK;
+	public static final Material BOARD_BORDER = Material.BLACK_CONCRETE;
+	public static final Material BOARD_MATERIAL = Material.DRIED_KELP_BLOCK;
 	
 	public static final Material TOKEN_A = Material.BIRCH_PRESSURE_PLATE;
 	public static final Material TOKEN_B = Material.DARK_OAK_PRESSURE_PLATE;
@@ -42,14 +43,16 @@ public class GomokuMC extends JavaPlugin {
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		if (command.getName().contentEquals("startgame")) {
 			if (sender instanceof Player) {
-				if (args.length < 2) {
+				if (args.length < 3) {
 					sender.sendMessage(ChatColor.RED + "Not enough players.");
-					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <player1> <player2>");
+					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <mode> <player1> <player2>");
 					return (true);
 				}
 				
-				Player player1 = Bukkit.getPlayerExact(args[0]);
-				Player player2 = Bukkit.getPlayerExact(args[1]);
+				int i = (new Random()).nextInt(2);
+				Player player1 = Bukkit.getPlayerExact(args[i]);
+				Player player2 = Bukkit.getPlayerExact(args[(i + 1) % 2]);
+				
 				if (player1 == null || player2 == null) {
 					sender.sendMessage(ChatColor.RED + "Invalid player name.");
 					return (true);
@@ -57,7 +60,7 @@ public class GomokuMC extends JavaPlugin {
 				
 				if (player1.equals(player2)) {
 					sender.sendMessage(ChatColor.RED + "Not enough players.");
-					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <player1> <player2>");
+					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <mode> <player1> <player2>");
 					return (true);
 				}
 				
@@ -67,25 +70,23 @@ public class GomokuMC extends JavaPlugin {
 				}
 				
 				Location origin = ((Player)sender).getLocation().add(0, -1, 0).getBlock().getLocation();
-				GomokuInstance newGame = new GomokuInstance(this, origin, player1, player2);
-				this.games.put(player1, newGame);
-				this.games.put(player2, newGame);
-				
-				// Generate board
-				for (int x = 0; x < BOARD_SIZE; x++) {
-					for (int z = 0; z < BOARD_SIZE; z++) {
-						if (x == 0 || z == 0 || x == 20 || z == 20) {
-							((Player)sender).getWorld().getBlockAt(origin.getBlockX() + x - BOARD_OFFSET - 1, origin.getBlockY() + 1, origin.getBlockZ() + z - BOARD_OFFSET - 1).setType(Material.AIR);
-							((Player)sender).getWorld().getBlockAt(origin.getBlockX() + x - BOARD_OFFSET - 1, origin.getBlockY(), origin.getBlockZ() + z - BOARD_OFFSET - 1).setType(BOARD_BORDER);
-						}
-						else {
-							((Player)sender).getWorld().getBlockAt(origin.getBlockX() + x - BOARD_OFFSET - 1, origin.getBlockY() + 1, origin.getBlockZ() + z - BOARD_OFFSET - 1).setType(Material.AIR);
-							((Player)sender).getWorld().getBlockAt(origin.getBlockX() + x - BOARD_OFFSET - 1, origin.getBlockY(), origin.getBlockZ() + z - BOARD_OFFSET - 1).setType(BOARD_MATERIAL);
-						}
-					}
+				GomokuInstance game;
+				if (args[0].equalsIgnoreCase("classic")) {
+					game = new GomokuInstance(this, origin, player1, player2);
 				}
+				else if (args[0].equalsIgnoreCase("arena")) {
+					game = new ArenaInstance(this, origin, player1, player2);
+				}
+				else {
+					sender.sendMessage(ChatColor.RED + "Unknown game mode.");
+					return (true);
+				}
+				game.generate();
 				
-				Bukkit.getPluginManager().registerEvents(newGame, this);
+				this.games.put(player1, game);
+				this.games.put(player2, game);
+				
+				Bukkit.getPluginManager().registerEvents(game, this);
 				player1.sendMessage(ChatColor.YELLOW + "It is " + player1.getDisplayName() + ChatColor.RESET + ChatColor.YELLOW + "'s turn.");
 				player2.sendMessage(ChatColor.YELLOW + "It is " + player1.getDisplayName() + ChatColor.RESET + ChatColor.YELLOW + "'s turn.");
 			}
