@@ -1,9 +1,10 @@
-P=251                           # path
- =251:15                        # space
-T=206,206,206,206,x,206         # layer 1, layer 2,... etc, x  is player block
-B=166                           # boundary
-1=159:3                         # player 1 block
-2=159:14                        # player 2 block
+P=WHITE_CONCRETE                # path
+ =BLACK_CONCRETE                # space
+T=END_STONE_BRICKS,END_STONE_BRICKS,END_STONE_BRICKS,END_STONE_BRICKS,XXX,END_STONE_BRICKS        
+t=END_STONE_BRICKS				# default tower spot before tower is erect
+B=BARRIER                       # boundary
+1=LIGHT_BLUE_STAINED_GLASS      # player 1 block
+2=RED_STAINED_GLASS             # player 2 block
 M=1,3,5                         # Min, max, turn before spawn
 
 BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
@@ -20,103 +21,103 @@ B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT 
 B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
-B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
-B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
-B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
-B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
-B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
-B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
-B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
-B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
-B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
-B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
-B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
-B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
-B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
-B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
-B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
-B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
-B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
+B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
+B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
+B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
+B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
+B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
+B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
+B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
+B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
+B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
+B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
+B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
+B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
+B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
+B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
+B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
+B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
+B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
+B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
+B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
+B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
+B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
+B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
+B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
+B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
+B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
+B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
+B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
+B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
+B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
+B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
+B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
+B    P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P  M  P    B
 B    P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P     P    B
 B   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   TTT   B
 B   TtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtTPPPTtT   B
