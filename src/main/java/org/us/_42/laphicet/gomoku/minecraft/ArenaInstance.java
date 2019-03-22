@@ -20,7 +20,7 @@ public class ArenaInstance extends GomokuInstance {
 	private int minMobs;
 	private int maxMobs;
 	private int spawnDelay;
-	private List<char[]> map;
+	private List<char[]> map = new ArrayList<char[]>();
 	private int arenaSize;
 	private Map<Character,Material> mapInfo = new HashMap<Character,Material>();
 	
@@ -60,7 +60,7 @@ public class ArenaInstance extends GomokuInstance {
 				for (int i = 0; i < info.length(); i++) {
 					mapInput[i] = info.charAt(i);
 				}
-				map.add(mapInput);
+				this.map.add(mapInput);
 				continue;
 			}
 			if (info.isEmpty()) {
