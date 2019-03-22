@@ -3,8 +3,10 @@ package org.us._42.laphicet.gomoku.minecraft;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -14,13 +16,13 @@ import org.bukkit.inventory.ItemStack;
 public class ArenaInstance extends GomokuInstance {
 	private List<String> content;
 	
-	private List<Material> tower; 
+	private List<Material> tower = new ArrayList<Material>(); 
 	private int minMobs;
 	private int maxMobs;
 	private int spawnDelay;
 	private List<char[]> map;
 	private int arenaSize;
-	private HashMap<Character,Material> mapInfo;
+	private Map<Character,Material> mapInfo = new HashMap<Character,Material>();
 	
 	public ArenaInstance(GomokuMC plugin, Location origin, Player one, Player two, String mapfile) throws IOException {
 		super(plugin, origin, one, two);
@@ -110,7 +112,8 @@ public class ArenaInstance extends GomokuInstance {
 		for (int x = 0; x < this.map.size(); x++) {
 			char[] mapBlocks = this.map.get(x);
 			for (int z = 0; z < mapBlocks.length; z++) {
-				this.origin.getWorld().getBlockAt(this.origin.getBlockX() + x - (this.arenaSize / 2) - 1, this.origin.getBlockY() + 1, this.origin.getBlockZ() + z - (this.arenaSize / 2) - 1).setType(mapInfo.get(mapBlocks[z]));
+				this.origin.getWorld().getBlockAt(this.origin.getBlockX() + x - (this.arenaSize / 2), this.origin.getBlockY(), this.origin.getBlockZ() + z - (this.arenaSize / 2)).setType(mapInfo.get(mapBlocks[z]));
+				this.origin.getWorld().getBlockAt(this.origin.getBlockX() + x - (this.arenaSize / 2), this.origin.getBlockY() - 1, this.origin.getBlockZ() + z - (this.arenaSize / 2)).setType(Material.IRON_BLOCK);
 			}
 		}
 	}
