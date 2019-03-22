@@ -33,15 +33,15 @@ import org.us._42.laphicet.gomoku.PlayerController;
 import net.md_5.bungee.api.ChatColor;
 
 public class GomokuInstance implements GameStateReporter, Listener {
-	private GomokuMC plugin;
-	private Gomoku game;
-	private Location origin;
-	private Player[] players = new Player[2];
+	protected GomokuMC plugin;
+	protected Gomoku game;
+	protected Location origin;
+	protected Player[] players = new Player[2];
 	
-	private Scoreboard scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
-	private Objective captures = this.scoreboard.registerNewObjective("Captures", "dummy", "Captures", RenderType.INTEGER);
+	protected Scoreboard scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+	protected Objective captures = this.scoreboard.registerNewObjective("Captures", "dummy", "Captures", RenderType.INTEGER);
 	
-	private static class MCPlayer implements PlayerController {
+	protected static class MCPlayer implements PlayerController {
 		Player player;
 
 		int x = -1;
@@ -114,7 +114,7 @@ public class GomokuInstance implements GameStateReporter, Listener {
 		}
 	}
 	
-	private void victorySequence(int winner) {
+	protected void victorySequence(int winner) {
 		HandlerList.unregisterAll(this);
 		for (Player player : this.players) {
 			this.plugin.games.remove(player);

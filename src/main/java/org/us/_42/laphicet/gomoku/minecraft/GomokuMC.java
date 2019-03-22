@@ -1,5 +1,6 @@
 package org.us._42.laphicet.gomoku.minecraft;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -75,7 +76,13 @@ public class GomokuMC extends JavaPlugin {
 					game = new GomokuInstance(this, origin, player1, player2);
 				}
 				else if (args[0].equalsIgnoreCase("arena")) {
-					game = new ArenaInstance(this, origin, player1, player2);
+					try {
+						game = new ArenaInstance(this, origin, player1, player2, "map");
+					} catch (IOException e) {
+						e.printStackTrace();
+						sender.sendMessage(ChatColor.RED + "Your mum gey.");
+						return true;
+					}
 				}
 				else {
 					sender.sendMessage(ChatColor.RED + "Unknown game mode.");
