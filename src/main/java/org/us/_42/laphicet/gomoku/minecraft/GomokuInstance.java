@@ -33,13 +33,22 @@ import org.us._42.laphicet.gomoku.PlayerController;
 import net.md_5.bungee.api.ChatColor;
 
 public class GomokuInstance implements GameStateReporter, Listener {
+	private static final Material BOARD_BORDER = Material.BLACK_CONCRETE;
+	private static final Material BOARD_MATERIAL = Material.DRIED_KELP_BLOCK;
+	
+	private static final Material TOKEN_A = Material.BIRCH_PRESSURE_PLATE;
+	private static final Material TOKEN_B = Material.DARK_OAK_PRESSURE_PLATE;
+	
+	private static final int BOARD_OFFSET = Gomoku.BOARD_LENGTH / 2;
+	private static final int BOARD_SIZE = Gomoku.BOARD_LENGTH + 2;
+	
 	protected GomokuMC plugin;
 	protected Gomoku game;
 	protected Location origin;
 	protected Player[] players = new Player[2];
 	
 	protected Scoreboard scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
-	protected Objective captures = this.scoreboard.registerNewObjective("Captures", "dummy", "Captures", RenderType.INTEGER);
+	protected Objective sidebar = this.scoreboard.registerNewObjective("sidebar", "dummy", "Captures", RenderType.INTEGER);
 	
 	protected static class MCPlayer implements PlayerController {
 		Player player;
@@ -91,35 +100,57 @@ public class GomokuInstance implements GameStateReporter, Listener {
 		this.origin = origin;
 		this.players[0] = one;
 		this.players[1] = two;
-		
-		this.captures.setDisplaySlot(DisplaySlot.SIDEBAR);
-		this.captures.getScore(one.getName()).setScore(0);
-		this.captures.getScore(two.getName()).setScore(0);
-		one.setScoreboard(this.scoreboard);
-		two.setScoreboard(this.scoreboard);
 	}
 	
 	public void generate() {
-		for (int x = 0; x < GomokuMC.BOARD_SIZE; x++) {
-			for (int z = 0; z < GomokuMC.BOARD_SIZE; z++) {
+		for (int x = 0; x < BOARD_SIZE; x++) {
+			for (int z = 0; z < BOARD_SIZE; z++) {
 				if (x == 0 || z == 0 || x == 20 || z == 20) {
-					this.origin.getWorld().getBlockAt(this.origin.getBlockX() + x - GomokuMC.BOARD_OFFSET - 1, this.origin.getBlockY() + 1, this.origin.getBlockZ() + z - GomokuMC.BOARD_OFFSET - 1).setType(Material.AIR);
-					this.origin.getWorld().getBlockAt(this.origin.getBlockX() + x - GomokuMC.BOARD_OFFSET - 1, this.origin.getBlockY(), this.origin.getBlockZ() + z - GomokuMC.BOARD_OFFSET - 1).setType(GomokuMC.BOARD_BORDER);
+					this.origin.getWorld().getBlockAt(this.origin.getBlockX() + x - BOARD_OFFSET - 1, this.origin.getBlockY() + 1, this.origin.getBlockZ() + z - BOARD_OFFSET - 1).setType(Material.AIR);
+					this.origin.getWorld().getBlockAt(this.origin.getBlockX() + x - BOARD_OFFSET - 1, this.origin.getBlockY(), this.origin.getBlockZ() + z - BOARD_OFFSET - 1).setType(BOARD_BORDER);
 				}
 				else {
-					this.origin.getWorld().getBlockAt(this.origin.getBlockX() + x - GomokuMC.BOARD_OFFSET - 1, this.origin.getBlockY() + 1, this.origin.getBlockZ() + z - GomokuMC.BOARD_OFFSET - 1).setType(Material.AIR);
-					this.origin.getWorld().getBlockAt(this.origin.getBlockX() + x - GomokuMC.BOARD_OFFSET - 1, this.origin.getBlockY(), this.origin.getBlockZ() + z - GomokuMC.BOARD_OFFSET - 1).setType(GomokuMC.BOARD_MATERIAL);
+					this.origin.getWorld().getBlockAt(this.origin.getBlockX() + x - BOARD_OFFSET - 1, this.origin.getBlockY() + 1, this.origin.getBlockZ() + z - BOARD_OFFSET - 1).setType(Material.AIR);
+					this.origin.getWorld().getBlockAt(this.origin.getBlockX() + x - BOARD_OFFSET - 1, this.origin.getBlockY(), this.origin.getBlockZ() + z - BOARD_OFFSET - 1).setType(BOARD_MATERIAL);
 				}
 			}
 		}
 	}
 	
-	protected void victorySequence(int winner) {
+	protected void populateSidebar() {
+		for (Player player: this.players) {
+			this.sidebar.getScore(player.getName()).setScore(0);
+		}
+	}
+	
+	protected void updateSidebar() {
+		this.sidebar.getScore(this.players[0].getName()).setScore(this.game.getCaptureCount(1));
+		this.sidebar.getScore(this.players[1].getName()).setScore(this.game.getCaptureCount(2));
+	}
+	
+	public void begin() {
+		this.populateSidebar();
+		this.sidebar.setDisplaySlot(DisplaySlot.SIDEBAR);
+		
+		for (Player player: this.players) {
+			this.plugin.games.put(player, this);
+			player.setScoreboard(this.scoreboard);
+			player.sendMessage(ChatColor.YELLOW + "It is " + this.players[0].getDisplayName() + ChatColor.RESET + ChatColor.YELLOW + "'s turn.");
+		}
+		Bukkit.getPluginManager().registerEvents(this, this.plugin);
+	}
+	
+	public void end() {
 		HandlerList.unregisterAll(this);
 		for (Player player : this.players) {
 			this.plugin.games.remove(player);
-			player.sendTitle(this.game.getPlayerController(winner).name(this.game, winner) + " has won!", "", 10, 70, 20);
 			player.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+		}
+	}
+	
+	protected void victorySequence(int winner) {
+		for (Player player : this.players) {
+			player.sendTitle(this.game.getPlayerController(winner).name(this.game, winner) + " has won!", "", 10, 70, 20);
 		}
 		
 		new BukkitRunnable() {
@@ -154,35 +185,35 @@ public class GomokuInstance implements GameStateReporter, Listener {
 	public void logTurn(Gomoku game, Collection<String> logs) {
 		logs.forEach(this.players[0]::sendMessage);
 		logs.forEach(this.players[1]::sendMessage);
-		this.captures.getScore(this.players[0].getName()).setScore(game.getCaptureCount(1));
-		this.captures.getScore(this.players[1].getName()).setScore(game.getCaptureCount(2));
+		this.updateSidebar();
 		
 		int winner = game.getWinner();
 		if (winner > 0) {
 			this.victorySequence(winner);
+			this.end();
 		}
 	}
 	
 	@Override
 	public void reportChange(Gomoku game, int x, int y, int value) {
-		Location board = this.origin.clone().subtract(GomokuMC.BOARD_OFFSET, 0, GomokuMC.BOARD_OFFSET);
+		Location board = this.origin.clone().subtract(BOARD_OFFSET, 0, BOARD_OFFSET);
 		if (value == 0) {
 			board.add(x, 1, y).getBlock().setType(Material.AIR);
 		}
 		else if (value == 1) {
-			board.add(x, 1, y).getBlock().setType(GomokuMC.TOKEN_A);
+			board.add(x, 1, y).getBlock().setType(TOKEN_A);
 		}
 		else {
-			board.add(x, 1, y).getBlock().setType(GomokuMC.TOKEN_B);
+			board.add(x, 1, y).getBlock().setType(TOKEN_B);
 		}
 	}
 	
 	@EventHandler
 	public void onBlockBreak(BlockBreakEvent event) {
-		if (event.getBlock().getX() <= (origin.getBlockX() + GomokuMC.BOARD_OFFSET + 1) &&
-			event.getBlock().getX() >= (origin.getBlockX() - GomokuMC.BOARD_OFFSET - 1) &&
-			event.getBlock().getZ() <= (origin.getBlockZ() + GomokuMC.BOARD_OFFSET + 1) &&
-			event.getBlock().getZ() >= (origin.getBlockZ() - GomokuMC.BOARD_OFFSET - 1) &&
+		if (event.getBlock().getX() <= (origin.getBlockX() + BOARD_OFFSET + 1) &&
+			event.getBlock().getX() >= (origin.getBlockX() - BOARD_OFFSET - 1) &&
+			event.getBlock().getZ() <= (origin.getBlockZ() + BOARD_OFFSET + 1) &&
+			event.getBlock().getZ() >= (origin.getBlockZ() - BOARD_OFFSET - 1) &&
 			((event.getBlock().getY() == origin.getBlockY()) || (event.getBlock().getY() == origin.getBlockY() + 1))) {
 			event.setCancelled(true);
 		}
@@ -190,10 +221,10 @@ public class GomokuInstance implements GameStateReporter, Listener {
 	
 	@EventHandler
 	public void onBlockPlace(BlockPlaceEvent event) {
-		if (event.getBlock().getX() <= (origin.getBlockX() + GomokuMC.BOARD_OFFSET + 1) &&
-			event.getBlock().getX() >= (origin.getBlockX() - GomokuMC.BOARD_OFFSET - 1) &&
-			event.getBlock().getZ() <= (origin.getBlockZ() + GomokuMC.BOARD_OFFSET + 1) &&
-			event.getBlock().getZ() >= (origin.getBlockZ() - GomokuMC.BOARD_OFFSET - 1) &&
+		if (event.getBlock().getX() <= (origin.getBlockX() + BOARD_OFFSET + 1) &&
+			event.getBlock().getX() >= (origin.getBlockX() - BOARD_OFFSET - 1) &&
+			event.getBlock().getZ() <= (origin.getBlockZ() + BOARD_OFFSET + 1) &&
+			event.getBlock().getZ() >= (origin.getBlockZ() - BOARD_OFFSET - 1) &&
 			((event.getBlock().getY() == origin.getBlockY()) || (event.getBlock().getY() == origin.getBlockY() + 1))) {
 			event.setCancelled(true);
 		}
@@ -206,10 +237,10 @@ public class GomokuInstance implements GameStateReporter, Listener {
 		}
 		
 		Block block = event.getClickedBlock();
-		if (block.getX() <= (origin.getBlockX() + GomokuMC.BOARD_OFFSET) &&
-			block.getX() >= (origin.getBlockX() - GomokuMC.BOARD_OFFSET) &&
-			block.getZ() <= (origin.getBlockZ() + GomokuMC.BOARD_OFFSET) &&
-			block.getZ() >= (origin.getBlockZ() - GomokuMC.BOARD_OFFSET) &&
+		if (block.getX() <= (origin.getBlockX() + BOARD_OFFSET) &&
+			block.getX() >= (origin.getBlockX() - BOARD_OFFSET) &&
+			block.getZ() <= (origin.getBlockZ() + BOARD_OFFSET) &&
+			block.getZ() >= (origin.getBlockZ() - BOARD_OFFSET) &&
 			((block.getY() == origin.getBlockY()) || (block.getY() == origin.getBlockY() + 1))) {
 			int player = this.game.getTurn() % 2;
 			if (!(this.players[player].equals(event.getPlayer()))) {
@@ -220,8 +251,8 @@ public class GomokuInstance implements GameStateReporter, Listener {
 			}
 			
 			MCPlayer controller = (MCPlayer)this.game.getPlayerController(player + 1);
-			controller.x = block.getX() - (origin.getBlockX() - GomokuMC.BOARD_OFFSET);
-			controller.y = block.getZ() - (origin.getBlockZ() - GomokuMC.BOARD_OFFSET);
+			controller.x = block.getX() - (origin.getBlockX() - BOARD_OFFSET);
+			controller.y = block.getZ() - (origin.getBlockZ() - BOARD_OFFSET);
 			this.game.next();
 			event.setCancelled(true);
 		}
@@ -230,17 +261,16 @@ public class GomokuInstance implements GameStateReporter, Listener {
 	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent event) {
 		if (event.getPlayer().equals(this.players[0])) {
-			this.players[1].sendMessage(this.players[0].getDisplayName() + ChatColor.RESET + "has forfeited.");
-			this.players[1].sendMessage(this.players[1].getDisplayName() + ChatColor.RESET + "has won.");
+			this.players[1].sendMessage(this.players[0].getDisplayName() + ChatColor.RESET + " has forfeited.");
 			this.victorySequence(2);
 		}
 		else if (event.getPlayer().equals(this.players[1])) {
-			this.players[1].sendMessage(this.players[1].getDisplayName() + ChatColor.RESET + "has forfeited.");
-			this.players[1].sendMessage(this.players[0].getDisplayName() + ChatColor.RESET + "has won.");
+			this.players[0].sendMessage(this.players[1].getDisplayName() + ChatColor.RESET + " has forfeited.");
 			this.victorySequence(1);
 		}
 		else {
 			return;
 		}
+		this.end();
 	}
 }

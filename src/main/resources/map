@@ -1,7 +1,7 @@
 P=WHITE_CONCRETE                # path
  =BLACK_CONCRETE                # space
-T=END_STONE_BRICKS,END_STONE_BRICKS,END_STONE_BRICKS,END_STONE_BRICKS,XXX,END_STONE_BRICKS        
-t=END_STONE_BRICKS				# default tower spot before tower is erect
+T=END_STONE_BRICKS,END_STONE_BRICKS,END_STONE_BRICKS,END_STONE_BRICKS,X,END_STONE_BRICKS        
+t=END_STONE_BRICKS              # default tower spot before tower is erect
 B=BARRIER                       # boundary
 1=LIGHT_BLUE_STAINED_GLASS      # player 1 block
 2=RED_STAINED_GLASS             # player 2 block

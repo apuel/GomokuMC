@@ -1,5 +1,6 @@
 package org.us._42.laphicet.gomoku.minecraft;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -7,31 +8,35 @@ import java.util.Random;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.us._42.laphicet.gomoku.Gomoku;
+
+import com.google.common.io.Files;
 
 import net.md_5.bungee.api.ChatColor;
 
 public class GomokuMC extends JavaPlugin {
 	public Map<Player, GomokuInstance> games = new HashMap<Player, GomokuInstance>();
 	
-	public static final Material BOARD_BORDER = Material.BLACK_CONCRETE;
-	public static final Material BOARD_MATERIAL = Material.DRIED_KELP_BLOCK;
-	
-	public static final Material TOKEN_A = Material.BIRCH_PRESSURE_PLATE;
-	public static final Material TOKEN_B = Material.DARK_OAK_PRESSURE_PLATE;
-	
-	public static final int BOARD_OFFSET = Gomoku.BOARD_LENGTH / 2;
-	public static final int BOARD_SIZE = Gomoku.BOARD_LENGTH + 2;
-	
 	@Override
 	public void onEnable() {
+		File dataFolder = this.getDataFolder();
+		if (dataFolder.exists() && !(dataFolder.isDirectory())) {
+			dataFolder.delete();
+		}
+		if (!(dataFolder.exists())) {
+			dataFolder.mkdir();
+			try {
+				Files.copy(new File(this.getClassLoader().getResource("map").getFile()), new File(dataFolder, "default"));
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	@Override
@@ -46,13 +51,13 @@ public class GomokuMC extends JavaPlugin {
 			if (sender instanceof Player) {
 				if (args.length < 3) {
 					sender.sendMessage(ChatColor.RED + "Not enough players.");
-					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <mode> <player1> <player2>");
+					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <mode> <player1> <player2> [map]");
 					return (true);
 				}
 				
 				int i = (new Random()).nextInt(2);
-				Player player1 = Bukkit.getPlayerExact(args[i]);
-				Player player2 = Bukkit.getPlayerExact(args[(i + 1) % 2]);
+				Player player1 = Bukkit.getPlayerExact(args[1 + i]);
+				Player player2 = Bukkit.getPlayerExact(args[1 + ((i + 1) % 2)]);
 				
 				if (player1 == null || player2 == null) {
 					sender.sendMessage(ChatColor.RED + "Invalid player name.");
@@ -61,7 +66,7 @@ public class GomokuMC extends JavaPlugin {
 				
 				if (player1.equals(player2)) {
 					sender.sendMessage(ChatColor.RED + "Not enough players.");
-					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <mode> <player1> <player2>");
+					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <mode> <player1> <player2> [map]");
 					return (true);
 				}
 				
@@ -77,8 +82,14 @@ public class GomokuMC extends JavaPlugin {
 				}
 				else if (args[0].equalsIgnoreCase("arena")) {
 					try {
-						game = new ArenaInstance(this, origin, player1, player2, "map");
-					} catch (IOException e) {
+						if (args.length < 4) {
+							game = new ArenaInstance(this, origin, player1, player2, "default");
+						}
+						else {
+							game = new ArenaInstance(this, origin, player1, player2, args[3]);
+						}
+					}
+					catch (IOException e) {
 						e.printStackTrace();
 						sender.sendMessage(ChatColor.RED + "Your mum gey.");
 						return true;
@@ -88,14 +99,9 @@ public class GomokuMC extends JavaPlugin {
 					sender.sendMessage(ChatColor.RED + "Unknown game mode.");
 					return (true);
 				}
+				
 				game.generate();
-				
-				this.games.put(player1, game);
-				this.games.put(player2, game);
-				
-				Bukkit.getPluginManager().registerEvents(game, this);
-				player1.sendMessage(ChatColor.YELLOW + "It is " + player1.getDisplayName() + ChatColor.RESET + ChatColor.YELLOW + "'s turn.");
-				player2.sendMessage(ChatColor.YELLOW + "It is " + player1.getDisplayName() + ChatColor.RESET + ChatColor.YELLOW + "'s turn.");
+				game.begin();
 			}
 			return (true);
 		}
@@ -103,8 +109,8 @@ public class GomokuMC extends JavaPlugin {
 			if (sender instanceof Player) {
 				GomokuInstance game = this.games.get(sender);
 				if (game != null) {
-					PlayerQuitEvent event = new PlayerQuitEvent((Player)sender, "Forfeited Gomoku.");
-					game.onPlayerQuit(event);
+					game.onPlayerQuit(new PlayerQuitEvent((Player)sender, "Forfeited Gomoku."));
+					sender.sendMessage(((Player)sender).getDisplayName() + ChatColor.RESET + " has forfeited.");
 				}
 				else {
 					sender.sendMessage(ChatColor.RED + "You are not in a game!");
