@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
@@ -27,10 +29,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -57,10 +62,281 @@ public class ArenaInstance extends GomokuInstance {
 	private Map<Character,Material> mapInfo = new HashMap<Character,Material>();
 	private PlayerStats[] stats = { new PlayerStats(), new PlayerStats() };
 	
+//	private static ItemStack[] damageTowers = { new ItemStack(), new ItemStack(), new ItemStack(), new ItemStack() };
+	private static Map<String,BiConsumer<ArenaInstance,Tower>> towerUpgrade = new HashMap<String,BiConsumer<ArenaInstance,Tower>>();
+	private static ItemStack[] damageTowerItems = new ItemStack[4];
+	private static ItemStack[] speedTowerItems = new ItemStack[4];
+	private static ItemStack[] healthTowerItems = new ItemStack[4];
+	private static ItemStack[] luckTowerItems = new ItemStack[4];
+	
+	private static ItemStack createIcon(Material icon, BiConsumer<ArenaInstance,Tower> action, String title, String... desc) {
+		ItemStack item = new ItemStack(icon);
+		ItemMeta meta = item.getItemMeta();
+		meta.setDisplayName(title);
+		meta.setLore(Arrays.asList(desc));
+		meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+		item.setItemMeta(meta);
+		towerUpgrade.put(title, action);
+		return (item);
+	}
+	
+	private void placeEntity(Tower tower) {
+		int posx = origin.getBlockX() - (this.arenaSize / 2);
+		int posy = this.origin.getBlockY() + 1;
+		int posz = origin.getBlockZ() - (this.map.size() / 2);
+		
+//		this.origin.getWorld().getBlockAt(posx + tower.posx, posy, posz + tower.posz).setType(material);
+	}
+	
+	private static void upgradeTower(ArenaInstance game, Tower tower) {
+		if (game.stats[tower.token - 1].balance < Tower.UPGRADE_PRICE[tower.tier]) {
+			game.players[tower.token - 1].sendMessage("Insufficient points");
+		}
+		else {
+			game.stats[tower.token - 1].balance -= Tower.UPGRADE_PRICE[tower.tier];
+			if (tower.type == Tower.Type.DAMAGE) {
+				game.stats[tower.token - 1].attackBonus += Tower.UPGRADE_BONUS[tower.tier];
+				game.placeEntity(tower);
+			}
+			else if (tower.type == Tower.Type.SPEED) {
+				game.stats[tower.token - 1].speedBonus += Tower.UPGRADE_BONUS[tower.tier];
+				game.placeEntity(tower);
+			}
+			else if (tower.type == Tower.Type.HEALTH) {
+				game.stats[tower.token - 1].healthBonus += Tower.UPGRADE_BONUS[tower.tier];
+				game.placeEntity(tower);
+			}
+			else if (tower.type == Tower.Type.LUCK) {
+				game.stats[tower.token - 1].eliteBonus += Tower.UPGRADE_BONUS[tower.tier];
+				game.stats[tower.token - 1].powerfulBonus += 1;
+				game.placeEntity(tower);
+			}
+
+			game.stats[tower.token - 1].score -= Tower.TOWER_SCORE[tower.tier];
+			tower.tier += 1;
+			game.stats[tower.token - 1].score += Tower.TOWER_SCORE[tower.tier];
+			
+			game.players[tower.token - 1].sendMessage("Your " + tower.type + " tower has been upgraded to tier " + tower.tier + ".");
+			game.populateTowerMenu(tower);
+			game.updateSidebar();
+		}
+	}
+	
+	static {
+		damageTowerItems[0] = createIcon(Material.WOODEN_SWORD, (game, tower) -> {
+				tower.type = Tower.Type.DAMAGE;
+				upgradeTower(game, tower);
+			},
+			"Convert To Damage Tower - 100 points",
+			"",
+			ChatColor.BLUE + "Bonus income from tower: 10 points",
+			"",
+			"Use this to convert your tower to a damage tower.",
+			"Any monster beacons you own will gain bonus damage.",
+			"",
+			ChatColor.YELLOW + "Tier 1: 1% damage bonus, upgrade cost: 100 points",
+			ChatColor.YELLOW + "Tier 2: 3% damage bonus, upgrade cost: 300 points",
+			ChatColor.YELLOW + "Tier 3: 5% damage bonus, upgrade cost: 500 points"
+		);
+		
+		damageTowerItems[1] = createIcon(Material.STONE_SWORD, ArenaInstance::upgradeTower, "Upgrade To Tier 2 Damage Tower - 300 points",
+			"",
+			ChatColor.BLUE + "Bonus income from tower: 30 points",
+			"",
+			"This is currently a tier 1 damage tower.",
+			"Current tower rewards 1% damage bonus (stacks with other tower)",
+			"",
+			ChatColor.YELLOW + "Tier 2: 3% damage bonus, upgrade cost: 300 points",
+			ChatColor.YELLOW + "Tier 3: 5% damage bonus, upgrade cost: 500 points"
+		);
+		
+		damageTowerItems[2] = createIcon(Material.IRON_SWORD, ArenaInstance::upgradeTower, "Upgrade To Tier 3 Damage Tower - 500 points",
+			"",
+			ChatColor.BLUE + "Bonus income from tower: 50 points",
+			"",
+			"This is currently a tier 2 damage tower.",
+			"Current tower rewards 3% damage bonus (stacks with other tower)",
+			"",
+			ChatColor.YELLOW + "Tier 3: 5% damage bonus, upgrade cost: 500 points"
+		);
+	
+		damageTowerItems[3] = createIcon(Material.DIAMOND_SWORD, (game, tower) -> {
+				game.players[tower.token - 1].sendMessage("Tower cannot be further upgraded.");
+			},
+			"Tier 3 Damage Tower",
+			"",
+			ChatColor.BLUE + "Bonus income from tower: 100 points",
+			"",
+			"This is currently a tier 3 damage tower.",
+			"Current tower rewards 5% damage bonus (stacks with other tower)"
+		);
+		
+		speedTowerItems[0] = createIcon(Material.LEATHER_BOOTS, (game, tower) -> {
+				tower.type = Tower.Type.SPEED;
+				upgradeTower(game, tower);
+			},
+			"Convert To Speed Tower - 100 points",
+			"",
+			ChatColor.BLUE + "Bonus income from tower: 10 points",
+			"",
+			"Use this to convert your tower to a speed tower.",
+			"Any monster beacons you own will gain bonus speed.",
+			"",
+			ChatColor.YELLOW + "Tier 1: 1% speed bonus, upgrade cost: 100 points",
+			ChatColor.YELLOW + "Tier 2: 3% speed bonus, upgrade cost: 300 points",
+			ChatColor.YELLOW + "Tier 3: 5% speed bonus, upgrade cost: 500 points"
+		);
+			
+		speedTowerItems[1] = createIcon(Material.CHAINMAIL_BOOTS, ArenaInstance::upgradeTower, "Upgrade To Tier 2 Speed Tower - 300 points",
+			"",
+			ChatColor.BLUE + "Bonus income from tower: 30 points",
+			"",
+			"This is currently a tier 1 speed tower.",
+			"Current tower rewards 1% speed bonus (stacks with other tower)",
+			"",
+			ChatColor.YELLOW + "Tier 2: 3% speed bonus, upgrade cost: 300 points",
+			ChatColor.YELLOW + "Tier 3: 5% speed bonus, upgrade cost: 500 points"
+		);
+			
+		speedTowerItems[2] = createIcon(Material.IRON_BOOTS, ArenaInstance::upgradeTower, "Upgrade To Tier 3 Speed Tower - 500 points",
+			"",
+			ChatColor.BLUE + "Bonus income from tower: 50 points",
+			"",
+			"This is currently a tier 2 speed tower.",
+			"Current tower rewards 3% speed bonus (stacks with other tower)",
+			"",
+			ChatColor.YELLOW + "Tier 3: 5% speed bonus, upgrade cost: 500 points"
+		);
+			
+		speedTowerItems[3] = createIcon(Material.DIAMOND_BOOTS, (game, tower) -> {
+				game.players[tower.token - 1].sendMessage("Tower cannot be further upgraded.");
+			}, 
+			"Tier 3 Speed Tower",
+			"",
+			ChatColor.BLUE + "Bonus income from tower: 100 points",
+			"",
+			"This is currently a tier 3 speed tower.",
+			"Current tower rewards 5% speed bonus (stacks with other tower)"
+		);
+		
+		healthTowerItems[0] = createIcon(Material.LEATHER_CHESTPLATE, (game, tower) -> {
+				tower.type = Tower.Type.HEALTH;
+				upgradeTower(game, tower);
+			},
+			"Convert To Health Tower - 100 points",
+			"",
+			ChatColor.BLUE + "Bonus income from tower: 10 points",
+			"",
+			"Use this to convert your tower to a health tower.",
+			"Any monster beacons you own will gain bonus health.",
+			"",
+			ChatColor.YELLOW + "Tier 1: 1% health bonus, upgrade cost: 100 points",
+			ChatColor.YELLOW + "Tier 2: 3% health bonus, upgrade cost: 300 points",
+			ChatColor.YELLOW + "Tier 3: 5% health bonus, upgrade cost: 500 points"
+		);
+			
+		healthTowerItems[1] = createIcon(Material.CHAINMAIL_CHESTPLATE, ArenaInstance::upgradeTower, "Upgrade To Tier 2 Health Tower - 300 points",
+			"",
+			ChatColor.BLUE + "Bonus income from tower: 30 points",
+			"",
+			"This is currently a tier 1 health tower.",
+			"Current tower rewards 1% health bonus (stacks with other tower)",
+			"",
+			ChatColor.YELLOW + "Tier 2: 3% health bonus, upgrade cost: 300 points",
+			ChatColor.YELLOW + "Tier 3: 5% health bonus, upgrade cost: 500 points"
+		);
+			
+		healthTowerItems[2] = createIcon(Material.IRON_CHESTPLATE, ArenaInstance::upgradeTower, "Upgrade To Tier 3 Health Tower - 500 points",
+			"",
+			ChatColor.BLUE + "Bonus income from tower: 50 points",
+			"",
+			"This is currently a tier 2 health tower.",
+			"Current tower rewards 3% health bonus (stacks with other tower)",
+			"",
+			ChatColor.YELLOW + "Tier 3: 5% health bonus, upgrade cost: 500 points"
+		);
+			
+		healthTowerItems[3] = createIcon(Material.DIAMOND_CHESTPLATE, (game, tower) -> {
+				game.players[tower.token - 1].sendMessage("Tower cannot be further upgraded.");
+			},
+			"Tier 3 Health Tower",
+			"",
+			ChatColor.BLUE + "Bonus income from tower: 100 points",
+			"",
+			"This is currently a tier 3 health tower.",
+			"Current tower rewards 5% health bonus (stacks with other tower)"
+		);
+		
+		luckTowerItems[0] = createIcon(Material.COAL, (game, tower) -> {
+				tower.type = Tower.Type.LUCK;
+				upgradeTower(game, tower);
+			},
+			"Convert To Luck Tower - 100 points",
+			"",
+			ChatColor.BLUE + "Bonus income from tower: 10 points",
+			"",
+			"Use this to convert your tower to a luck tower.",
+			"Any monster beacons you own will increase chance to spawn stronger enemies.",
+			"",
+			ChatColor.YELLOW + "Tier 1: Increase 1% chance to spawn elite",
+			ChatColor.YELLOW + "Tier 1: Upgrade cost 100 points",
+			ChatColor.YELLOW + "Tier 2: Increase 3% chance to spawn elite, 1% to spawn powerful monster",
+			ChatColor.YELLOW + "Tier 2: Upgrade cost 300 points",
+			ChatColor.YELLOW + "Tier 3: Increase 5% chance to spawn elite, 2% to spawn powerful monster",
+			ChatColor.YELLOW + "Tier 3: Upgrade cost: 500 points"
+		);
+			
+		luckTowerItems[1] = createIcon(Material.IRON_INGOT, ArenaInstance::upgradeTower, "Upgrade To Tier 2 Luck Tower - 300 points",
+			"",
+			ChatColor.BLUE + "Bonus income from tower: 30 points",
+			"",
+			"This is currently a tier 1 luck tower.",
+			"Current tower rewards increase 1% chance to spawn elite (stacks with other tower)",
+			"",
+			ChatColor.YELLOW + "Tier 2: Increase 3% chance to spawn elite, 1% to spawn powerful monster",
+			ChatColor.YELLOW + "Tier 2: Upgrade cost 300 points",
+			ChatColor.YELLOW + "Tier 3: Increase 5% chance to spawn elite, 2% to spawn powerful monster",
+			ChatColor.YELLOW + "Tier 3: Upgrade cost: 500 points"
+		);
+			
+		luckTowerItems[2] = createIcon(Material.GOLD_INGOT, ArenaInstance::upgradeTower, "Upgrade To Tier 3 Luck Tower - 500 points",
+			"",
+			ChatColor.BLUE + "Bonus income from tower: 50 points",
+			"",
+			"This is currently a tier 2 luck tower.",
+			"Current tower rewards increase 3% chance to spawn elite",
+			"1% to spawn powerful monster (stacks with other tower)",
+			"",
+			ChatColor.YELLOW + "Tier 3: Increase 5% chance to spawn elite, 2% to spawn powerful monster",
+			ChatColor.YELLOW + "Tier 3: Upgrade cost: 500 points"
+		);
+			
+		luckTowerItems[3] = createIcon(Material.DIAMOND_ORE, (game, tower) -> {
+				game.players[tower.token - 1].sendMessage("Tower cannot be further upgraded.");
+			},
+			"Tier 3 Luck Tower",
+			"",
+			ChatColor.BLUE + "Bonus income from tower: 100 points",
+			"",
+			"This is currently a tier 3 luck tower.",
+			"Current tower rewards increase 5% chance to spawn elite",
+			"2% to spawn powerful monster (stacks with other tower)"
+		);
+		
+	}
+	
 	private static class PlayerStats {
 		int balance = 100;
 		int score = 0;
 		int income = 50;
+		int eliteBonus = 0;
+		int powerfulBonus = 0;
+		int attackBonus = 0;
+		int speedBonus = 0;
+		int healthBonus = 0;
+		
+		Inventory towerMenu = Bukkit.createInventory(null, 9, "Tower Menu");
+		Tower selectedTower = null;
 	}
 	
 	private static class Tower {
@@ -71,9 +347,10 @@ public class ArenaInstance extends GomokuInstance {
 			HEALTH,
 			LUCK;
 		}
-		static final int[] UPGRADE_PRICE = {100, 500, 1500};
-		static final int[] TOWER_INCOME = {10, 50, 100};
-		static final int[] TOWER_SCORE = {1, 3, 5};
+		static final int[] UPGRADE_PRICE = {100, 300, 500};
+		static final int[] TOWER_INCOME = {10, 30, 50, 100};
+		static final int[] TOWER_SCORE = {1, 3, 5, 10};
+		static final int[] UPGRADE_BONUS = {1, 2, 2};
 		
 		int tier;
 		int health = 10;
@@ -336,36 +613,38 @@ public class ArenaInstance extends GomokuInstance {
 		this.sidebar.setDisplayName(ChatColor.BOLD + "Gomoku: Arena Mode");
 		
 		this.setLine(14, ChatColor.AQUA + ChatColor.BOLD.toString() + ChatColor.stripColor(this.players[0].getDisplayName()) + ChatColor.WHITE +  ":");
-		this.setLine(13, "Captures: 0");
-		this.setLine(12, "Towers: 0");
+		this.setLine(13, "Captures: 0 | Towers: 0");
+		this.setLine(12, "Spawners: 0 | Score: 0");
 		this.setLine(11, "Balance: " + this.stats[0].balance);
 		this.setLine(10, "Income: " + this.stats[0].income);
-		this.setLine(9, "Spawners: 0");
-		this.setLine(8, "Score: 0");
+		this.setLine(9, "Bonus: ATK 0% - SPD 0% - HP 0%");
+		this.setLine(8, "Spawn: Elite 0% - Powerful 0%");
 		this.setLine(7, " ");
 		
 		this.setLine(6, ChatColor.RED + ChatColor.BOLD.toString() + ChatColor.stripColor(this.players[1].getDisplayName()) + ChatColor.WHITE +  ":");
-		this.setLine(5, "Captures: 0");
-		this.setLine(4, "Towers: 0");
+		this.setLine(5, "Captures: 0 | Towers: 0");
+		this.setLine(4, "Spawners: 0 | Score: 0");
 		this.setLine(3, "Balance: " + this.stats[1].balance);
 		this.setLine(2, "Income: " + this.stats[1].income);
-		this.setLine(1, "Spawners: 0");
-		this.setLine(0, "Score: 0");
+		this.setLine(1, "Bonus: ATK 0% - SPD 0% - HP 0%");
+		this.setLine(0, "Spawn: Elite 0% - Powerful 0%");
 	}
 	
 	@Override
 	protected void updateSidebar() {
-		this.setLine(13, "Captures: " + this.game.getCaptureCount(1));
-		this.setLine(12, "Towers: " + this.game.getTokensPlaced(1));
+		this.setLine(13, "Captures: " + this.game.getCaptureCount(1) + " | Towers: " + this.game.getTokensPlaced(1));
+		this.setLine(12, "Spawners: 0 | Score: " + this.stats[0].score);
 		this.setLine(11, "Balance: " + this.stats[0].balance);
 		this.setLine(10, "Income: " + this.stats[0].income);
-		this.setLine(8, "Score: " + this.stats[0].score);
+		this.setLine(9, "Bonus: ATK " + this.stats[0].attackBonus + "% - SPD " + this.stats[0].speedBonus + "% - HP " + this.stats[0].healthBonus + "%");
+		this.setLine(8, "Spawn: Elite " + this.stats[0].eliteBonus + "% - Powerful " + this.stats[0].powerfulBonus + "%");
 		
-		this.setLine(5, "Captures: " + this.game.getCaptureCount(2));
-		this.setLine(4, "Towers: " + this.game.getTokensPlaced(2));
+		this.setLine(5, "Captures: " + this.game.getCaptureCount(2) + " | Towers: " + this.game.getTokensPlaced(2));
+		this.setLine(4, "Spawners: 0 | Score: " + this.stats[1].score);
 		this.setLine(3, "Balance: " + this.stats[1].balance);
 		this.setLine(2, "Income: " + this.stats[1].income);
-		this.setLine(0, "Score: " + this.stats[1].score);
+		this.setLine(1, "Bonus: ATK " + this.stats[1].attackBonus + "% - SPD " + this.stats[1].speedBonus + "% - HP " + this.stats[1].healthBonus + "%");
+		this.setLine(0, "Spawn: Elite " + this.stats[1].eliteBonus + "% - Powerful " + this.stats[1].powerfulBonus + "%");
 	}
 	
 	private BukkitRunnable task = new BukkitRunnable() {
@@ -490,7 +769,24 @@ public class ArenaInstance extends GomokuInstance {
 		Tower core = this.towerLookup[y][x];
 		this.stats[core.token - 1].income -= Tower.TOWER_INCOME[core.tier];
 		this.stats[core.token - 1].score -= Tower.TOWER_SCORE[core.tier];
+		
+		if (core.type == Tower.Type.DAMAGE) {
+			this.stats[core.token - 1].attackBonus -= ((core.tier - 1) * 2 + 1);
+		}
+		else if (core.type == Tower.Type.SPEED) {
+			this.stats[core.token - 1].speedBonus -= ((core.tier - 1) * 2 + 1);
+		}
+		else if (core.type == Tower.Type.HEALTH) {
+			this.stats[core.token - 1].healthBonus -= ((core.tier - 1) * 2 + 1);
+		}
+		else if (core.type == Tower.Type.LUCK) {
+			this.stats[core.token - 1].eliteBonus -= ((core.tier - 1) * 2 + 1);
+			this.stats[core.token - 1].powerfulBonus -= core.tier;
+		}
 		core.token = 0;
+		core.health = 0;
+		core.type = Tower.Type.DEFAULT;
+		core.tier = 0;
 		
 		int posx = origin.getBlockX() - (this.arenaSize / 2);
 		int posy = this.origin.getBlockY() + 1;
@@ -528,6 +824,29 @@ public class ArenaInstance extends GomokuInstance {
 		}
 	}
 	
+	public void doTowerUpgrade(Tower tower, ItemStack item) {
+		towerUpgrade.get(item.getItemMeta().getDisplayName()).accept(this, tower);
+	}
+	
+	@EventHandler
+	public void onInventoryClick(InventoryClickEvent event) {
+		int token;
+		if (((Player)event.getWhoClicked()).equals(this.players[0])) {
+			token  = 1;
+		}
+		else if (((Player)event.getWhoClicked()).equals(this.players[1])) {
+			token = 2;
+		}
+		else {
+			return;
+		}
+		
+		if (event.getInventory().equals(this.stats[token - 1].towerMenu)) {
+			event.setCancelled(true);
+			this.doTowerUpgrade(this.stats[token - 1].selectedTower, event.getCurrentItem());
+		}
+	}
+	
 	@Override
 	@EventHandler
 	public void onBlockBreak(BlockBreakEvent event) {
@@ -550,15 +869,63 @@ public class ArenaInstance extends GomokuInstance {
 		}
 	}
 	
+	private void populateTowerMenu(Tower tower) {
+		int token = tower.token;
+		this.stats[token - 1].selectedTower = tower;
+		this.stats[token - 1].towerMenu.clear();
+		if (tower.type == Tower.Type.DEFAULT) {
+			this.stats[token - 1].towerMenu.setItem(1, damageTowerItems[0]);
+			this.stats[token - 1].towerMenu.setItem(3, speedTowerItems[0]);
+			this.stats[token - 1].towerMenu.setItem(5, healthTowerItems[0]);
+			this.stats[token - 1].towerMenu.setItem(7, luckTowerItems[0]);
+		}
+		else if (tower.type == Tower.Type.DAMAGE) {
+			this.stats[token - 1].towerMenu.setItem(4, damageTowerItems[tower.tier]);
+		}
+		else if (tower.type == Tower.Type.SPEED) {
+			this.stats[token - 1].towerMenu.setItem(4, speedTowerItems[tower.tier]);
+		}
+		else if (tower.type == Tower.Type.HEALTH) {
+			this.stats[token - 1].towerMenu.setItem(4, healthTowerItems[tower.tier]);
+		}
+		else if (tower.type == Tower.Type.LUCK) {
+			this.stats[token - 1].towerMenu.setItem(4, luckTowerItems[tower.tier]);
+		}
+	}
+	
+	private void onTowerInteract(PlayerInteractEvent event, Tower tower) {
+		int token = tower.token;
+		if ((token != 0) && event.getPlayer().equals(this.players[token - 1])) {
+			//TODO update menu before opening it
+			this.populateTowerMenu(tower);
+			event.getPlayer().openInventory(this.stats[token - 1].towerMenu);
+		}
+	}
+	
+	private void onConstructTower(PlayerInteractEvent event, Tower tower) {
+		int player = this.game.getTurn() % 2;
+		if (!(this.players[player].equals(event.getPlayer()))) {
+			if (this.players[(player + 1) % 2].equals(event.getPlayer())) {
+				event.getPlayer().sendMessage(ChatColor.RED + "It's not your turn.");
+			}
+			return;
+		}
+		
+		MCPlayer controller = (MCPlayer)this.game.getPlayerController(player + 1);
+		controller.x = tower.x;
+		controller.y = tower.y;
+		this.game.next();
+	}
+	
 	@Override
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent event) {
-		if ((event.getHand() != EquipmentSlot.HAND) || (event.getAction() == Action.PHYSICAL)) {
+		if ((event.getHand() != EquipmentSlot.HAND) || (event.getAction() == Action.PHYSICAL) || (event.getAction() == Action.RIGHT_CLICK_AIR)) {
 			return;
 		}
 		
 		Block block;
-		if ((event.getAction() == Action.RIGHT_CLICK_AIR) || (event.getAction() == Action.LEFT_CLICK_AIR)) {
+		if (event.getAction() == Action.LEFT_CLICK_AIR) {
 			Location position = event.getPlayer().getEyeLocation();
 			RayTraceResult result = position.getWorld().rayTraceBlocks(position, position.getDirection(), 20);
 			block = result.getHitBlock();
@@ -589,25 +956,14 @@ public class ArenaInstance extends GomokuInstance {
 				return; //There is no tower here
 			}
 			
-			int player = this.game.getTurn() % 2;
-			if (!(this.players[player].equals(event.getPlayer()))) {
-				if (this.players[(player + 1) % 2].equals(event.getPlayer())) {
-					event.getPlayer().sendMessage(ChatColor.RED + "It's not your turn.");
-				}
-				event.setCancelled(true);
-				return;
-			}
-			
 			tower = tower.base.get(0);
-			if (tower.token != 0) {
-				event.setCancelled(true);
-				return; //Tower is already owned
-			}
 			
-			MCPlayer controller = (MCPlayer)this.game.getPlayerController(player + 1);
-			controller.x = tower.x;
-			controller.y = tower.y;
-			this.game.next();
+			if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+				this.onTowerInteract(event, tower);
+			}
+			else {
+				this.onConstructTower(event, tower);
+			}
 			event.setCancelled(true);
 		}
 	}
