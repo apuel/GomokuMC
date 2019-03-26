@@ -796,10 +796,6 @@ public class Gomoku {
 				this.checkAdjacent(this.x, this.y, value);
 			}
 			
-			if (this.winner == 0) {
-				this.turn++;
-			}
-			
 			if (this.winner != 0) {
 				for (PlayerController p : this.set) {
 					p.informWinner(this, this.winner);
@@ -810,6 +806,10 @@ public class Gomoku {
 				this.reporter.logTurn(this, this.logs);
 			}
 			this.logs.clear();
+			
+			if (this.winner == 0) {
+				this.turn++;
+			}
 		}
 	}
 	

@@ -459,17 +459,17 @@ public class ArenaInstance extends GomokuInstance {
 	
 	@Override
 	public void logTurn(Gomoku game, Collection<String> logs) {
-		super.logTurn(game, logs);
 		if (game.getWinner() == 0) {
 			this.stats[game.getTurn() % 2].balance += this.stats[game.getTurn() % 2].income;
 		}
+		super.logTurn(game, logs);
 	}
 	
 	public void buildTower(int x, int y, int token) {
 		Tower core = this.towerLookup[y][x];
-		core.token = token;
 		this.stats[token - 1].income += Tower.TOWER_INCOME[0];
 		this.stats[token - 1].score += Tower.TOWER_SCORE[0];
+		core.token = token;
 		
 		int posx = origin.getBlockX() - (this.arenaSize / 2);
 		int posy = this.origin.getBlockY() + 1;
@@ -491,7 +491,7 @@ public class ArenaInstance extends GomokuInstance {
 		this.stats[core.token - 1].income -= Tower.TOWER_INCOME[core.tier];
 		this.stats[core.token - 1].score -= Tower.TOWER_SCORE[core.tier];
 		core.token = 0;
-
+		
 		int posx = origin.getBlockX() - (this.arenaSize / 2);
 		int posy = this.origin.getBlockY() + 1;
 		int posz = origin.getBlockZ() - (this.map.size() / 2);
