@@ -51,7 +51,9 @@ public class GomokuMC extends JavaPlugin {
 			if (sender instanceof Player) {
 				if (args.length < 3) {
 					sender.sendMessage(ChatColor.RED + "Not enough players.");
-					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <mode> <player1> <player2> [map]");
+					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <mode> <player1> <player2> [map] [flags]");
+					sender.sendMessage(ChatColor.GRAY + "Modes: Classic, Arena");
+					sender.sendMessage(ChatColor.GRAY + "Flags: i### (set income), b### (set balance) (Only works for Arena) where ### is amount");
 					return (true);
 				}
 				
@@ -88,11 +90,31 @@ public class GomokuMC extends JavaPlugin {
 						else {
 							game = new ArenaInstance(this, origin, player1, player2, args[3]);
 						}
+						if (args.length > 4) {
+							for (int m = 4; m < args.length; m++) {
+								try {
+									if (args[m].charAt(0) == 'b') {
+										((ArenaInstance)game).setStartingBalance(Integer.parseInt(args[m].substring(1)));
+									}
+									else if (args[m].charAt(0) == 'i') {
+										((ArenaInstance)game).setStartingIncome(Integer.parseInt(args[m].substring(1)));
+									}
+									else {
+										sender.sendMessage(ChatColor.RED + "Invalid Flag.");
+										return (true);
+									}
+								}
+								catch (NumberFormatException e) {
+									sender.sendMessage(ChatColor.RED + "Invalid balance or income value.");
+									return (true);
+								}
+							}
+						}
 					}
 					catch (IOException e) {
 						e.printStackTrace();
-						sender.sendMessage(ChatColor.RED + "Your mum gey.");
-						return true;
+						sender.sendMessage(ChatColor.RED + "Unexpected error loading map.");
+						return (true);
 					}
 				}
 				else {

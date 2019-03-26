@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -54,6 +55,13 @@ public class ArenaInstance extends GomokuInstance {
 	private List<char[]> map = new ArrayList<char[]>();
 	private int arenaSize;
 	private Map<Character,Material> mapInfo = new HashMap<Character,Material>();
+	private PlayerStats[] stats = { new PlayerStats(), new PlayerStats() };
+	
+	private static class PlayerStats {
+		int balance = 100;
+		int score = 0;
+		int income = 50;
+	}
 	
 	private static class Tower {
 		static enum Type {
@@ -63,16 +71,20 @@ public class ArenaInstance extends GomokuInstance {
 			HEALTH,
 			LUCK;
 		}
+		static final int[] UPGRADE_PRICE = {100, 500, 1500};
+		static final int[] TOWER_INCOME = {10, 50, 100};
+		static final int[] TOWER_SCORE = {1, 3, 5};
 		
+		int tier;
+		int health = 10;
+		Type type = Type.DEFAULT;
+		int token = 0;
+
 		List<Tower> base;
 		int posx;
 		int posz;
 		int x;
 		int y;
-		
-		int health = 10;
-		Type type = Type.DEFAULT;
-		int token = 0;
 		
 		Tower(int posx, int posz, int x, int y, List<Tower> base) {
 			this.posx = posx;
@@ -323,29 +335,37 @@ public class ArenaInstance extends GomokuInstance {
 	protected void populateSidebar() {
 		this.sidebar.setDisplayName(ChatColor.BOLD + "Gomoku: Arena Mode");
 		
-		this.setLine(12, ChatColor.AQUA + ChatColor.BOLD.toString() + ChatColor.stripColor(this.players[0].getDisplayName()) + ChatColor.WHITE +  ":");
-		this.setLine(11, "Captures: 0");
-		this.setLine(10, "Towers: 0");
-		this.setLine(9, "Balance: 0");
-		this.setLine(8, "Spawners: 0");
-		this.setLine(7, "Score: 0");
-		this.setLine(6, " ");
+		this.setLine(14, ChatColor.AQUA + ChatColor.BOLD.toString() + ChatColor.stripColor(this.players[0].getDisplayName()) + ChatColor.WHITE +  ":");
+		this.setLine(13, "Captures: 0");
+		this.setLine(12, "Towers: 0");
+		this.setLine(11, "Balance: " + this.stats[0].balance);
+		this.setLine(10, "Income: " + this.stats[0].income);
+		this.setLine(9, "Spawners: 0");
+		this.setLine(8, "Score: 0");
+		this.setLine(7, " ");
 		
-		this.setLine(5, ChatColor.RED + ChatColor.BOLD.toString() + ChatColor.stripColor(this.players[1].getDisplayName()) + ChatColor.WHITE +  ":");
-		this.setLine(4, "Captures: 0");
-		this.setLine(3, "Towers: 0");
-		this.setLine(2, "Balance: 0");
+		this.setLine(6, ChatColor.RED + ChatColor.BOLD.toString() + ChatColor.stripColor(this.players[1].getDisplayName()) + ChatColor.WHITE +  ":");
+		this.setLine(5, "Captures: 0");
+		this.setLine(4, "Towers: 0");
+		this.setLine(3, "Balance: " + this.stats[1].balance);
+		this.setLine(2, "Income: " + this.stats[1].income);
 		this.setLine(1, "Spawners: 0");
 		this.setLine(0, "Score: 0");
 	}
 	
 	@Override
 	protected void updateSidebar() {
-		this.setLine(11, "Captures: " + this.game.getCaptureCount(1));
-		this.setLine(10, "Towers: " + this.game.getTokensPlaced(1));
+		this.setLine(13, "Captures: " + this.game.getCaptureCount(1));
+		this.setLine(12, "Towers: " + this.game.getTokensPlaced(1));
+		this.setLine(11, "Balance: " + this.stats[0].balance);
+		this.setLine(10, "Income: " + this.stats[0].income);
+		this.setLine(8, "Score: " + this.stats[0].score);
 		
-		this.setLine(4, "Captures: " + this.game.getCaptureCount(2));
-		this.setLine(3, "Towers: " + this.game.getTokensPlaced(2));
+		this.setLine(5, "Captures: " + this.game.getCaptureCount(2));
+		this.setLine(4, "Towers: " + this.game.getTokensPlaced(2));
+		this.setLine(3, "Balance: " + this.stats[1].balance);
+		this.setLine(2, "Income: " + this.stats[1].income);
+		this.setLine(0, "Score: " + this.stats[1].score);
 	}
 	
 	private BukkitRunnable task = new BukkitRunnable() {
@@ -358,6 +378,16 @@ public class ArenaInstance extends GomokuInstance {
 			}
 		}
 	};
+	
+	public void setStartingBalance(int balance) {
+		stats[0].balance = balance;
+		stats[1].balance = balance;
+	}
+	
+	public void setStartingIncome(int income){
+		stats[0].income = income;
+		stats[1].income = income;
+	}
 	
 	@Override
 	public void begin() {
@@ -427,9 +457,19 @@ public class ArenaInstance extends GomokuInstance {
 		}.runTaskTimer(this.plugin, 0, 5);
 	}
 	
+	@Override
+	public void logTurn(Gomoku game, Collection<String> logs) {
+		super.logTurn(game, logs);
+		if (game.getWinner() == 0) {
+			this.stats[game.getTurn() % 2].balance += this.stats[game.getTurn() % 2].income;
+		}
+	}
+	
 	public void buildTower(int x, int y, int token) {
 		Tower core = this.towerLookup[y][x];
 		core.token = token;
+		this.stats[token - 1].income += Tower.TOWER_INCOME[0];
+		this.stats[token - 1].score += Tower.TOWER_SCORE[0];
 		
 		int posx = origin.getBlockX() - (this.arenaSize / 2);
 		int posy = this.origin.getBlockY() + 1;
@@ -448,8 +488,10 @@ public class ArenaInstance extends GomokuInstance {
 	
 	public void destroyTower(int x, int y) {
 		Tower core = this.towerLookup[y][x];
+		this.stats[core.token - 1].income -= Tower.TOWER_INCOME[core.tier];
+		this.stats[core.token - 1].score -= Tower.TOWER_SCORE[core.tier];
 		core.token = 0;
-		
+
 		int posx = origin.getBlockX() - (this.arenaSize / 2);
 		int posy = this.origin.getBlockY() + 1;
 		int posz = origin.getBlockZ() - (this.map.size() / 2);
