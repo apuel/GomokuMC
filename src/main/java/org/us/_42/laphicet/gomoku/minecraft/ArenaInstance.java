@@ -90,7 +90,8 @@ public class ArenaInstance extends GomokuInstance {
 			beaconLore.add("");
 			beaconLore.add(ChatColor.BLUE + "Purchase Monster Beacon - 300 points");
 			beaconLore.add("");
-			beaconLore.add(ChatColor.YELLOW + "You can increase the performance of your beacon by purchasing luck tower upgrade");
+			beaconLore.add(ChatColor.YELLOW + "You can increase the performance of your");
+			beaconLore.add(ChatColor.YELLOW + "beacon by purchasing luck tower upgrade");
 			ItemMeta beaconMeta = beaconItem.getItemMeta();
 			beaconMeta.setDisplayName("Beacon Menu");
 			beaconMeta.setLore(beaconLore);
