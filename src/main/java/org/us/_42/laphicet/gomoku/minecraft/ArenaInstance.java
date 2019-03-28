@@ -1,5 +1,6 @@
 package org.us._42.laphicet.gomoku.minecraft;
 
+import java.awt.Event;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -66,6 +67,51 @@ public class ArenaInstance extends GomokuInstance {
 	
 	private static Map<String,BiConsumer<ArenaInstance,Tower>> towerUpgrade = new HashMap<String,BiConsumer<ArenaInstance,Tower>>();
 	private static ItemStack[][] towerItems = new ItemStack[Tower.Type.values().length][4];
+	
+
+	private static class Beacon {
+		private int[][] beaconMap;
+		private boolean[] beaconPlaced = new boolean[2];
+		private Inventory beaconMenu = Bukkit.createInventory(null, 9, "Beacon Menu");
+		private ItemStack beaconItem = new ItemStack(Material.BEACON);
+		
+		private int x;
+		private int z;
+		private int player;
+		
+		private int blockX;
+		private int blockY;
+		private int blockZ;
+		
+		private Material[] block = new Material[2];
+		
+		public Beacon() {
+			List<String> beaconLore = new ArrayList<String>();
+			beaconLore.add("");
+			beaconLore.add(ChatColor.BLUE + "Purchase Monster Beacon - 300 points");
+			beaconLore.add("");
+			beaconLore.add(ChatColor.YELLOW + "You can increase the performance of your beacon by purchasing luck tower upgrade");
+			ItemMeta beaconMeta = beaconItem.getItemMeta();
+			beaconMeta.setDisplayName("Beacon Menu");
+			beaconMeta.setLore(beaconLore);
+			beaconMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+			this.beaconItem.setItemMeta(beaconMeta);
+			this.beaconMenu.setItem(4, beaconItem);
+			this.block[0] = Material.WHITE_STAINED_GLASS;
+			this.block[1] = Material.BLACK_STAINED_GLASS;
+		}
+		
+		public void setBeaconInfo(int x, int z, int player, int blockX, int blockY, int blockZ) {
+			this.x = x;
+			this.z = z;
+			this.player = player;
+			this.blockX = blockX;
+			this.blockY = blockY;
+			this.blockZ = blockZ;
+		}
+	}
+	
+	private Beacon beacon = new Beacon();
 	
 	private static ItemStack createIcon(Material icon, BiConsumer<ArenaInstance,Tower> action, String title, String... desc) {
 		ItemStack item = new ItemStack(icon);
@@ -289,7 +335,7 @@ public class ArenaInstance extends GomokuInstance {
 			ChatColor.YELLOW + "Tier 3: Upgrade cost: 500 points"
 		);
 			
-		towerItems[Tower.Type.LUCK.ordinal()][3] = createIcon(Material.DIAMOND_ORE, (game, tower) -> {
+		towerItems[Tower.Type.LUCK.ordinal()][3] = createIcon(Material.DIAMOND, (game, tower) -> {
 				game.players[tower.token - 1].sendMessage("Tower cannot be further upgraded.");
 			},
 			"Tier 3 Luck Tower",
@@ -323,10 +369,10 @@ public class ArenaInstance extends GomokuInstance {
 			HEALTH,
 			LUCK;
 		}
-		static final int[] UPGRADE_PRICE = {100, 300, 500};
-		static final int[] TOWER_INCOME = {10, 30, 50, 100};
-		static final int[] TOWER_SCORE = {1, 3, 5, 10};
-		static final int[] UPGRADE_BONUS = {1, 2, 2};
+		static final int[] UPGRADE_PRICE = { 100, 300, 500 };
+		static final int[] TOWER_INCOME = { 10, 30, 50, 100 };
+		static final int[] TOWER_SCORE = { 1, 3, 5, 10 };
+		static final int[] UPGRADE_BONUS = { 1, 2, 2 };
 		
 		int tier;
 		int health = 10;
@@ -486,6 +532,8 @@ public class ArenaInstance extends GomokuInstance {
 				if (this.arenaSize < info.length()) {
 					this.arenaSize = info.length();
 				}
+				
+				this.beacon.beaconMap = new int[info.length()][info.length()];
 				
 				int posz = this.map.size();
 				Tower[] towers = new Tower[info.length()];
@@ -848,6 +896,27 @@ public class ArenaInstance extends GomokuInstance {
 		towerUpgrade.get(item.getItemMeta().getDisplayName()).accept(this, tower);
 	}
 	
+	public void doBeaconPurchase() {
+		if (this.stats[this.beacon.player - 1].balance < 300) {
+			Bukkit.broadcastMessage(ChatColor.RED + "You need 300 points to purchase this beacon");
+		}
+		else {
+			Bukkit.broadcastMessage(ChatColor.BLUE + "You have purchased this beacon!");
+			this.beacon.beaconPlaced[this.beacon.player - 1] = true;
+			this.beacon.beaconMap[this.beacon.x][this.beacon.z] = this.beacon.player;
+			this.stats[this.beacon.player - 1].balance -= 300;
+			this.origin.getWorld().getBlockAt(this.beacon.blockX, this.beacon.blockY, this.beacon.blockZ).setType(this.beacon.block[this.beacon.player - 1]);
+			this.origin.getWorld().getBlockAt(this.beacon.blockX - 1, this.beacon.blockY - 2, this.beacon.blockZ).setType(Material.IRON_BLOCK);
+			this.origin.getWorld().getBlockAt(this.beacon.blockX + 1, this.beacon.blockY - 2, this.beacon.blockZ).setType(Material.IRON_BLOCK);
+			this.origin.getWorld().getBlockAt(this.beacon.blockX, this.beacon.blockY - 2, this.beacon.blockZ - 1).setType(Material.IRON_BLOCK);
+			this.origin.getWorld().getBlockAt(this.beacon.blockX, this.beacon.blockY - 2, this.beacon.blockZ + 1).setType(Material.IRON_BLOCK);
+			this.origin.getWorld().getBlockAt(this.beacon.blockX - 1, this.beacon.blockY - 2, this.beacon.blockZ - 1).setType(Material.IRON_BLOCK);
+			this.origin.getWorld().getBlockAt(this.beacon.blockX + 1, this.beacon.blockY - 2, this.beacon.blockZ + 1).setType(Material.IRON_BLOCK);
+			this.origin.getWorld().getBlockAt(this.beacon.blockX - 1, this.beacon.blockY - 2, this.beacon.blockZ + 1).setType(Material.IRON_BLOCK);
+			this.origin.getWorld().getBlockAt(this.beacon.blockX + 1, this.beacon.blockY - 2, this.beacon.blockZ - 1).setType(Material.IRON_BLOCK);
+		}
+	}
+	
 	@EventHandler
 	public void onInventoryClick(InventoryClickEvent event) {
 		int token;
@@ -869,6 +938,10 @@ public class ArenaInstance extends GomokuInstance {
 			else {
 				this.doTowerUpgrade(this.stats[token - 1].selectedTower, event.getCurrentItem());
 			}
+		}
+		if (event.getInventory().equals(this.beacon.beaconMenu)) {
+			event.setCancelled(true);
+			this.doBeaconPurchase();
 		}
 	}
 	
@@ -929,7 +1002,35 @@ public class ArenaInstance extends GomokuInstance {
 		MCPlayer controller = (MCPlayer)this.game.getPlayerController(player + 1);
 		controller.x = tower.x;
 		controller.y = tower.y;
+		this.beacon.beaconPlaced[this.beacon.player - 1] = false;
 		this.game.next();
+	}
+	
+	private void onBeaconInteract(PlayerInteractEvent event, int x, int z, Block block) {
+		int player = this.game.getTurn() % 2;
+		if (!(this.players[player].equals(event.getPlayer()))) {
+			if (this.players[(player + 1) % 2].equals(event.getPlayer())) {
+				event.getPlayer().sendMessage(ChatColor.RED + "It's not your turn.");
+			}
+			return;
+		}
+		
+		if (!this.beacon.beaconPlaced[player]) {
+			if (this.beacon.beaconMap[x][z] == player + 1) {
+				Bukkit.broadcastMessage(ChatColor.RED + "You've already captured this beacon.");
+				
+			}
+			else if (this.beacon.beaconMap[x][z] == 0) {
+				this.beacon.setBeaconInfo(x, z, player + 1, block.getX(), block.getY() + 1, block.getZ());
+				event.getPlayer().openInventory(this.beacon.beaconMenu);
+			}
+			else {
+				Bukkit.broadcastMessage(ChatColor.RED + "This beacon has been captured by another player.");
+			}
+		}
+		else {
+			Bukkit.broadcastMessage(ChatColor.RED + "You can only capture one beacon per turn.");
+		}
 	}
 	
 	@Override
@@ -958,6 +1059,10 @@ public class ArenaInstance extends GomokuInstance {
 			block.getZ() >= (origin.getBlockZ() - (this.map.size() / 2) - 1)) {
 			int x = block.getX() - (origin.getBlockX() - (this.arenaSize / 2));
 			int z = block.getZ() - (origin.getBlockZ() - (this.map.size() / 2));
+
+			if (block.getType() == Material.BEACON) {
+				this.onBeaconInteract(event, x, z, block);
+			}
 			
 			Tower[] towers = this.towerMap.get(z);
 			if (towers.length <= x) {
