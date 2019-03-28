@@ -354,6 +354,7 @@ public class ArenaInstance extends GomokuInstance {
 		int balance = 100;
 		int score = 0;
 		int income = 50;
+		int spawner = 0;
 		
 		int[] bonus = new int[Tower.Type.values().length]; //LUCK == eliteBonus
 		int powerfulBonus = 0;
@@ -659,7 +660,7 @@ public class ArenaInstance extends GomokuInstance {
 	@Override
 	protected void updateSidebar() {
 		this.setLine(13, "Captures: " + this.game.getCaptureCount(1) + " | Towers: " + this.game.getTokensPlaced(1));
-		this.setLine(12, "Spawners: 0 | Score: " + this.stats[0].score);
+		this.setLine(12, "Spawners: " + this.stats[1].spawner + " | Score: " + this.stats[0].score);
 		this.setLine(11, "Balance: " + this.stats[0].balance);
 		this.setLine(10, "Income: " + this.stats[0].income);
 		this.setLine(9,
@@ -670,7 +671,7 @@ public class ArenaInstance extends GomokuInstance {
 		this.setLine(8, "Spawn: Elite " + this.stats[0].bonus[Tower.Type.LUCK.ordinal()] + "% - Powerful " + this.stats[0].powerfulBonus + "%");
 		
 		this.setLine(5, "Captures: " + this.game.getCaptureCount(2) + " | Towers: " + this.game.getTokensPlaced(2));
-		this.setLine(4, "Spawners: 0 | Score: " + this.stats[1].score);
+		this.setLine(4, "Spawners: " + this.stats[1].spawner + " | Score: " + this.stats[1].score);
 		this.setLine(3, "Balance: " + this.stats[1].balance);
 		this.setLine(2, "Income: " + this.stats[1].income);
 		this.setLine(1,
@@ -897,15 +898,16 @@ public class ArenaInstance extends GomokuInstance {
 		towerUpgrade.get(item.getItemMeta().getDisplayName()).accept(this, tower);
 	}
 	
-	public void doBeaconPurchase() {
+	public void doBeaconPurchase(InventoryClickEvent event) {
 		if (this.stats[this.beacon.player - 1].balance < 300) {
-			Bukkit.broadcastMessage(ChatColor.RED + "You need 300 points to purchase this beacon");
+			event.getWhoClicked().sendMessage(ChatColor.RED + "You need 300 points to purchase this beacon");
 		}
 		else {
-			Bukkit.broadcastMessage(ChatColor.BLUE + "You have purchased this beacon!");
+			Bukkit.broadcastMessage(ChatColor.BLUE + event.getWhoClicked().getName() + " has purchased a monster beacon!");
 			this.beacon.beaconPlaced[this.beacon.player - 1] = true;
 			this.beacon.beaconMap[this.beacon.x][this.beacon.z] = this.beacon.player;
 			this.stats[this.beacon.player - 1].balance -= 300;
+			this.stats[this.beacon.player - 1].spawner += 1;
 			this.origin.getWorld().getBlockAt(this.beacon.blockX, this.beacon.blockY, this.beacon.blockZ).setType(this.beacon.block[this.beacon.player - 1]);
 			this.origin.getWorld().getBlockAt(this.beacon.blockX - 1, this.beacon.blockY - 2, this.beacon.blockZ).setType(Material.IRON_BLOCK);
 			this.origin.getWorld().getBlockAt(this.beacon.blockX + 1, this.beacon.blockY - 2, this.beacon.blockZ).setType(Material.IRON_BLOCK);
@@ -942,7 +944,7 @@ public class ArenaInstance extends GomokuInstance {
 		}
 		if (event.getInventory().equals(this.beacon.beaconMenu)) {
 			event.setCancelled(true);
-			this.doBeaconPurchase();
+			this.doBeaconPurchase(event);
 		}
 	}
 	
@@ -1018,7 +1020,7 @@ public class ArenaInstance extends GomokuInstance {
 		
 		if (!this.beacon.beaconPlaced[player]) {
 			if (this.beacon.beaconMap[x][z] == player + 1) {
-				Bukkit.broadcastMessage(ChatColor.RED + "You've already captured this beacon.");
+				event.getPlayer().sendMessage(ChatColor.RED + "You've already captured this beacon.");
 				
 			}
 			else if (this.beacon.beaconMap[x][z] == 0) {
@@ -1026,11 +1028,11 @@ public class ArenaInstance extends GomokuInstance {
 				event.getPlayer().openInventory(this.beacon.beaconMenu);
 			}
 			else {
-				Bukkit.broadcastMessage(ChatColor.RED + "This beacon has been captured by another player.");
+				event.getPlayer().sendMessage(ChatColor.RED + "This beacon has been captured by another player.");
 			}
 		}
 		else {
-			Bukkit.broadcastMessage(ChatColor.RED + "You can only capture one beacon per turn.");
+			event.getPlayer().sendMessage(ChatColor.RED + "You can only capture one beacon per turn.");
 		}
 	}
 	
