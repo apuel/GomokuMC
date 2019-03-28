@@ -137,9 +137,7 @@ public class ArenaInstance extends GomokuInstance {
 			}
 			game.placeEntity(tower);
 
-			game.stats[tower.token - 1].score -= Tower.TOWER_SCORE[tower.tier];
 			tower.tier += 1;
-			game.stats[tower.token - 1].score += Tower.TOWER_SCORE[tower.tier];
 			
 			game.players[tower.token - 1].sendMessage("Your " + tower.type + " tower has been upgraded to tier " + tower.tier + ".");
 			game.populateTowerMenu(tower);
