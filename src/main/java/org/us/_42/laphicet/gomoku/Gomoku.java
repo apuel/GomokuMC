@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-public class Gomoku {
+public class Gomoku implements Cloneable {
 	public static final int BOARD_LENGTH = 19;
 	public static final int PLAYER_COUNT = 2;
 	public static final int CAPTURES_TO_WIN = 10;
@@ -16,8 +16,8 @@ public class Gomoku {
 	public static enum Alignment {
 		HORIZONTAL(1, 0),
 		VERTICAL(0, 1),
-		DIAG_POSITIVE(1, 1),
-		DIAG_NEGATIVE(1, -1);
+		ASCENDING(1, 1),
+		DESCENDING(1, -1);
 		
 		public final int dx;
 		public final int dy;
@@ -38,11 +38,11 @@ public class Gomoku {
 		
 		@Override
 		public Token clone() {
-			Token result = new Token(this.value);
+			Token token = new Token(this.value);
 			for (Alignment alignment : Alignment.values()) {
-				result.adjacent[alignment.ordinal()] = this.adjacent[alignment.ordinal()];
+				token.adjacent[alignment.ordinal()] = this.adjacent[alignment.ordinal()];
 			}
-			return (result);
+			return (token);
 		}
 	}
 	
@@ -105,6 +105,40 @@ public class Gomoku {
 	}
 	
 	/**
+	 * Duplicates another Gomoku instance, overwriting this instance.
+	 * 
+	 * @param gomoku The instance to duplicate.
+	 */
+	public void cloneOf(Gomoku gomoku) {
+		for (int y = 0; y < BOARD_LENGTH; y++) {
+			for (int x = 0; x < BOARD_LENGTH; x++) {
+				this.board[y][x] = null;
+				if (gomoku.board[y][x] != null) {
+					this.board[y][x] = gomoku.board[y][x].clone();
+					if ((gomoku.check5 != null) && (gomoku.check5 == gomoku.board[y][x])) {
+						this.check5 = this.board[y][x];
+					}
+				}
+			}
+		}
+		
+		for (int i = 0; i < PLAYER_COUNT; i++) {
+			this.captures[i] = gomoku.captures[i];
+			this.placed[i] = gomoku.placed[i];
+		}
+		
+		this.x = gomoku.x;
+		this.y = gomoku.y;
+		this.submitted = gomoku.submitted;
+		
+		this.logs.addAll(gomoku.logs);
+		this.turn = gomoku.turn;
+		this.winner = gomoku.winner;
+		this.started = gomoku.started;
+		this.abort = gomoku.abort;
+	}
+	
+	/**
 	 * See {@link Gomoku#clone()}.
 	 * Allows specification of a new {@link GameStateReporter} and {@link PlayerController}s.
 	 * 
@@ -113,33 +147,9 @@ public class Gomoku {
 	 * @return A clone of this instance.
 	 */
 	public Gomoku clone(GameStateReporter reporter, PlayerController... players) {
-		Gomoku result = new Gomoku(reporter, players);
-		for (int y = 0; y < BOARD_LENGTH; y++) {
-			for (int x = 0; x < BOARD_LENGTH; x++) {
-				if (this.board[y][x] != null) {
-					result.board[y][x] = this.board[y][x].clone();
-					if ((this.check5 != null) && (this.check5 == this.board[y][x])) {
-						result.check5 = result.board[y][x];
-					}
-				}
-			}
-		}
-		
-		for (int i = 0; i < PLAYER_COUNT; i++) {
-			result.captures[i] = this.captures[i];
-			result.placed[i] = this.placed[i];
-		}
-		
-		result.x = this.x;
-		result.y = this.y;
-		result.submitted = this.submitted;
-		
-		result.logs.addAll(this.logs);
-		result.turn = this.turn;
-		result.winner = this.winner;
-		result.started = this.started;
-		result.abort = this.abort;
-		return (result);
+		Gomoku gomoku = new Gomoku(reporter, players);
+		gomoku.cloneOf(this);
+		return (gomoku);
 	}
 	
 	@Override
@@ -154,14 +164,14 @@ public class Gomoku {
 	 * @return The PlayerController.
 	 */
 	public PlayerController getPlayerController(int value) {
-		if (value > 0 && value <= PLAYER_COUNT) {
+		if ((value > 0) && (value <= PLAYER_COUNT)) {
 			return (this.players[value - 1]);
 		}
 		return (null);
 	}
 	
 	/**
-	 * Gets the winning PlayerController.
+	 * Gets the winning token value.
 	 * 
 	 * @return The winning player's token value.
 	 */
@@ -185,7 +195,7 @@ public class Gomoku {
 	 * @return The number of successful captures.
 	 */
 	public int getCaptureCount(int value) {
-		if (value > 0 && value <= PLAYER_COUNT) {
+		if ((value > 0) && (value <= PLAYER_COUNT)) {
 			return (this.captures[value - 1]);
 		}
 		return (-1);
@@ -198,7 +208,7 @@ public class Gomoku {
 	 * @return The number of currently placed tokens.
 	 */
 	public int getTokensPlaced(int value) {
-		if (value > 0 && value <= PLAYER_COUNT) {
+		if ((value > 0) && (value <= PLAYER_COUNT)) {
 			return (this.placed[value - 1]);
 		}
 		return (-1);
@@ -213,7 +223,7 @@ public class Gomoku {
 	 * @return The number of tokens adjacent of a certain token, including itself.
 	 */
 	public int getAdjacentTokenCount(int x, int y, Alignment alignment) {
-		if (x < 0 || x >= BOARD_LENGTH || y < 0 || y >= BOARD_LENGTH) {
+		if ((x < 0) || (x >= BOARD_LENGTH) || (y < 0) || (y >= BOARD_LENGTH)) {
 			return (-1);
 		}
 		if (this.board[y][x] == null) {
@@ -245,7 +255,7 @@ public class Gomoku {
 	 * @return The value of the token at the given coordinates.
 	 */
 	public int getToken(int x, int y) {
-		if (x < 0 || x >= BOARD_LENGTH || y < 0 || y >= BOARD_LENGTH) {
+		if ((x < 0) || (x >= BOARD_LENGTH) || (y < 0) || (y >= BOARD_LENGTH)) {
 			return (-1);
 		}
 		if (this.board[y][x] != null) {
@@ -383,7 +393,7 @@ public class Gomoku {
 			int v1 = this.getToken(x1, y1);
 			int v2 = this.getToken(x2, y2);
 			
-			if (v1 > 0 && v1 != value && v2 > 0 && v2 != value) {
+			if ((v1 > 0) && (v1 != value) && (v2 > 0) && (v2 != value)) {
 				this.logs.add(String.format(CAPTURE_FORMAT, player.name(this, value), this.players[v1 - 1].name(this, v1), x1, y1));
 				this.logs.add(String.format(CAPTURE_FORMAT, player.name(this, value), this.players[v2 - 1].name(this, v2), x2, y2));
 				
@@ -431,7 +441,7 @@ public class Gomoku {
 	 */
 	public boolean wouldCapture(int x1, int y1, int x2, int y2, int value) {
 		int token = this.getToken(x1, y1);
-		if (token == value || token <= 0 || value <= 0 || (this.getToken(x2, y2) != 0)) {
+		if ((token == value) || (token <= 0) || (value <= 0) || (this.getToken(x2, y2) != 0)) {
 			return (false);
 		}
 		
@@ -444,7 +454,7 @@ public class Gomoku {
 			return (false);
 		}
 		
-		if (adx == 2 || ady == 2) {
+		if ((adx == 2) || (ady == 2)) {
 			dx /= 2; dy /= 2;
 			return ((this.getToken(x1 - dx, y1 - dy) == value) && (this.getToken(x1 + dx, y1 + dy) == token));
 		}
@@ -467,7 +477,7 @@ public class Gomoku {
 		if (this.getToken(x + (dx * 3), y + (dy * 3)) == value) {
 			int v1 = this.getToken(x + (dx * 1), y + (dy * 1));
 			int v2 = this.getToken(x + (dx * 2), y + (dy * 2));
-			if (v1 > 0 && v1 != value && v2 > 0 && v2 != value) {
+			if ((v1 > 0) && (v1 != value) && (v2 > 0) && (v2 != value)) {
 				return (1);
 			}
 		}
@@ -505,10 +515,10 @@ public class Gomoku {
 		int prev = this.getToken(x - dx, y - dy);
 		int next = this.getToken(x + dx, y + dy);
 		
-		if (prev == value && next != value && next > 0) {
+		if ((prev == value) && (next != value) && (next > 0)) {
 			return (this.getToken(x - (dx * 2), y - (dy * 2)) == next);
 		}
-		if (next == value && prev != value && prev > 0) {
+		if ((next == value) && (prev != value) && (prev > 0)) {
 			return (this.getToken(x + (dx * 2), y + (dy * 2)) == prev);
 		}
 		
@@ -565,6 +575,19 @@ public class Gomoku {
 	}
 	
 	/**
+	 * Checks if a token is in danger of being captured in a certain alignment.
+	 * 
+	 * @param x The x coordinate of the token.
+	 * @param y The y coordinate of the token.
+	 * @param value The value of the token.
+	 * @param alignment The alignment to check.
+	 * @return Whether or not the token is in danger of being captured in a certain alignment.
+	 */
+	public boolean isInDanger(int x, int y, int value, Alignment alignment) {
+		return (this.checkDanger(x, y, value, alignment.dx, alignment.dy));
+	}
+	
+	/**
 	 * Checks if a token is in danger of being captured.
 	 * 
 	 * @param x The x coordinate of the token.
@@ -573,10 +596,12 @@ public class Gomoku {
 	 * @return Whether or not the token is in danger of being captured.
 	 */
 	public boolean isInDanger(int x, int y, int value) {
-		return (this.checkDanger(x, y, value, +1, +0) ||
-				this.checkDanger(x, y, value, +0, +1) ||
-				this.checkDanger(x, y, value, +1, +1) ||
-				this.checkDanger(x, y, value, +1, -1));
+		for (Alignment alignment : Alignment.values()) {
+			if (this.checkDanger(x, y, value, alignment.dx, alignment.dy)) {
+				return (true);
+			}
+		}
+		return (false);
 	}
 	
 	/**
@@ -593,57 +618,68 @@ public class Gomoku {
 		int prev = 0;
 		int next = 0;
 		
-		boolean pspaced = false;
-		int pcount = 0;
+		int last = 0;
+		boolean spaced = false;
+		
 		for (int i = 1; ; i++) {
 			int token = this.getToken(x - (dx * i), y - (dy * i));
-			if ((token < 0) || ((token != 0) && (token != value)) || this.isCaptured(x + (dx * i), y + (dy * i), value)) {
-				if (!pspaced) {
+			if (((token != 0) && (token != value)) || ((token == 0) && this.isCaptured(x + (dx * i), y + (dy * i), value))) {
+				if ((i == 1) || (last != 0)) {
 					return (false);
 				}
 				break;
 			}
+			last = token;
+			
 			if (token == 0) {
-				if (!pspaced) {
-					pspaced = true;
-					prev = pcount;
+				if (!spaced) {
+					spaced = true;
 					continue;
 				}
-				if (prev == pcount) {
-					pspaced = false;
-				}
-				prev = pcount;
 				break;
 			}
-			pcount++;
-		}
-		if (prev != pcount) {
-			pspaced = false;
+			prev++;
 		}
 		
-		boolean nspaced = false;
-		int ncount = 0;
+		// The last previous token was the space, ignore it
+		if (last == 0) {
+			spaced = false;
+		}
+		
 		for (int i = 1; ; i++) {
 			int token = this.getToken(x + (dx * i), y + (dy * i));
-			if ((token < 0) || ((token != 0) && (token != value)) || this.isCaptured(x + (dx * i), y + (dy * i), value)) {
-				if (!nspaced) {
+			if (((token != 0) && (token != value)) || ((token == 0) && this.isCaptured(x + (dx * i), y + (dy * i), value))) {
+				if ((i == 1) || (last != 0)) {
 					return (false);
 				}
 				break;
 			}
+			last = token;
+			
 			if (token == 0) {
-				if (!nspaced && !pspaced) {
-					nspaced = true;
-					next = ncount;
+				if (!spaced) {
+					spaced = true;
 					continue;
 				}
-				prev = pcount;
 				break;
 			}
-			ncount++;
+			next++;
 		}
 		
-		return ((prev + 1 + next) == 3);
+		return ((prev + 1 + next) == (ADJACENT_TO_WIN - 2));
+	}
+	
+	/**
+	 * Checks for a free three created by placing a token at an alignment.
+	 * 
+	 * @param x The x coordinate of the token.
+	 * @param y The y coordinate of the token.
+	 * @param value The value of the token.
+	 * @param alignment The alignment to check for a free three at.
+	 * @return Whether or not the token would create a double three.
+	 */
+	public boolean createsFreeThree(int x, int y, int value, Alignment alignment) {
+		return (this.createsFreeThree(x, y, value, alignment.dx, alignment.dy));
 	}
 	
 	/**
@@ -656,17 +692,10 @@ public class Gomoku {
 	 */
 	public boolean createsDoubleThree(int x, int y, int value) {
 		int threes = 0;
-		if (this.createsFreeThree(x, y, value, +1, +0)) {
-			threes++;
-		}
-		if (this.createsFreeThree(x, y, value, +0, +1)) {
-			threes++;
-		}
-		if (this.createsFreeThree(x, y, value, +1, +1)) {
-			threes++;
-		}
-		if (this.createsFreeThree(x, y, value, +1, -1)) {
-			threes++;
+		for (Alignment alignment : Alignment.values()) {
+			if (this.createsFreeThree(x, y, value, alignment.dx, alignment.dy)) {
+				threes++;
+			}
 		}
 		return (threes >= 2);
 	}
@@ -699,7 +728,7 @@ public class Gomoku {
 			return (false);
 		}
 		
-		if (this.isCaptured(this.x, y, value)) {
+		if (this.isCaptured(this.x, this.y, value)) {
 			player.report(this, "You may not place a token into a capture!");
 			return (false);
 		}
@@ -762,7 +791,7 @@ public class Gomoku {
 			this.started = true;
 		}
 		
-		if (this.winner == 0 && !(this.abort)) {
+		if ((this.winner == 0) && !(this.abort)) {
 			PlayerController player = this.players[this.turn % PLAYER_COUNT];
 			int value = (this.turn % PLAYER_COUNT) + 1;
 			
@@ -788,7 +817,7 @@ public class Gomoku {
 			
 			this.applyCaptures(this.x, this.y, value);
 			int captures = this.captures[this.turn % PLAYER_COUNT];
-			if (this.check5 == null && captures >= CAPTURES_TO_WIN) {
+			if (captures >= CAPTURES_TO_WIN) {
 				this.winner = value;
 				this.logs.add(String.format("%s has captured %d times and won!", player.name(this, value), captures));
 			}

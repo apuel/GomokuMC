@@ -53,7 +53,7 @@ public class GomokuMC extends JavaPlugin {
 					sender.sendMessage(ChatColor.RED + "Not enough players.");
 					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <mode> <player1> <player2> [map] [flags]");
 					sender.sendMessage(ChatColor.GRAY + "Modes: Classic, Arena");
-					sender.sendMessage(ChatColor.GRAY + "Flags: i### (set income), b### (set balance) (Only works for Arena) where ### is amount");
+					sender.sendMessage(ChatColor.GRAY + "Arena Mode Flags: i### (set income), b### (set balance) where ### is amount.");
 					return (true);
 				}
 				
