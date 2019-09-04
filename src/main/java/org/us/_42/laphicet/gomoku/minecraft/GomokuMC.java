@@ -49,7 +49,8 @@ public class GomokuMC extends JavaPlugin {
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		if (command.getName().contentEquals("startgame")) {
 			if (sender instanceof Player) {
-				if (args.length < 3) {
+//				if (args.length < 3) {
+				if (args.length < 2) {
 					sender.sendMessage(ChatColor.RED + "Not enough players.");
 					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <player1> <player2>");
 //					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <mode> <player1> <player2> [map] [flags]");
