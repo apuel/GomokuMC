@@ -51,15 +51,18 @@ public class GomokuMC extends JavaPlugin {
 			if (sender instanceof Player) {
 				if (args.length < 3) {
 					sender.sendMessage(ChatColor.RED + "Not enough players.");
-					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <mode> <player1> <player2> [map] [flags]");
-					sender.sendMessage(ChatColor.GRAY + "Modes: Classic, Arena");
-					sender.sendMessage(ChatColor.GRAY + "Arena Mode Flags: i### (set income), b### (set balance) where ### is amount.");
+					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <player1> <player2>");
+//					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <mode> <player1> <player2> [map] [flags]");
+//					sender.sendMessage(ChatColor.GRAY + "Modes: Classic, Arena");
+//					sender.sendMessage(ChatColor.GRAY + "Arena Mode Flags: i### (set income), b### (set balance) where ### is amount.");
 					return (true);
 				}
 				
 				int i = (new Random()).nextInt(2);
-				Player player1 = Bukkit.getPlayerExact(args[1 + i]);
-				Player player2 = Bukkit.getPlayerExact(args[1 + ((i + 1) % 2)]);
+//				Player player1 = Bukkit.getPlayerExact(args[1 + i]);
+//				Player player2 = Bukkit.getPlayerExact(args[1 + ((i + 1) % 2)]);
+				Player player1 = Bukkit.getPlayerExact(args[i]);
+				Player player2 = Bukkit.getPlayerExact(args[(i + 1) % 2]);
 				
 				if (player1 == null || player2 == null) {
 					sender.sendMessage(ChatColor.RED + "Invalid player name.");
@@ -68,7 +71,7 @@ public class GomokuMC extends JavaPlugin {
 				
 				if (player1.equals(player2)) {
 					sender.sendMessage(ChatColor.RED + "Not enough players.");
-					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <mode> <player1> <player2> [map]");
+//					sender.sendMessage(ChatColor.YELLOW + "USAGE: /startgame <mode> <player1> <player2> [map]");
 					return (true);
 				}
 				
@@ -79,48 +82,48 @@ public class GomokuMC extends JavaPlugin {
 				
 				Location origin = ((Player)sender).getLocation().add(0, -1, 0).getBlock().getLocation();
 				GomokuInstance game;
-				if (args[0].equalsIgnoreCase("classic")) {
+//				if (args[0].equalsIgnoreCase("classic")) {
 					game = new GomokuInstance(this, origin, player1, player2);
-				}
-				else if (args[0].equalsIgnoreCase("arena")) {
-					try {
-						if (args.length < 4) {
-							game = new ArenaInstance(this, origin, player1, player2, "default");
-						}
-						else {
-							game = new ArenaInstance(this, origin, player1, player2, args[3]);
-						}
-						if (args.length > 4) {
-							for (int m = 4; m < args.length; m++) {
-								try {
-									if (args[m].charAt(0) == 'b') {
-										((ArenaInstance)game).setStartingBalance(Integer.parseInt(args[m].substring(1)));
-									}
-									else if (args[m].charAt(0) == 'i') {
-										((ArenaInstance)game).setStartingIncome(Integer.parseInt(args[m].substring(1)));
-									}
-									else {
-										sender.sendMessage(ChatColor.RED + "Invalid Flag.");
-										return (true);
-									}
-								}
-								catch (NumberFormatException e) {
-									sender.sendMessage(ChatColor.RED + "Invalid balance or income value.");
-									return (true);
-								}
-							}
-						}
-					}
-					catch (IOException e) {
-						e.printStackTrace();
-						sender.sendMessage(ChatColor.RED + "Unexpected error loading map.");
-						return (true);
-					}
-				}
-				else {
-					sender.sendMessage(ChatColor.RED + "Unknown game mode.");
-					return (true);
-				}
+//				}
+//				else if (args[0].equalsIgnoreCase("arena")) {
+//					try {
+//						if (args.length < 4) {
+//							game = new ArenaInstance(this, origin, player1, player2, "default");
+//						}
+//						else {
+//							game = new ArenaInstance(this, origin, player1, player2, args[3]);
+//						}
+//						if (args.length > 4) {
+//							for (int m = 4; m < args.length; m++) {
+//								try {
+//									if (args[m].charAt(0) == 'b') {
+//										((ArenaInstance)game).setStartingBalance(Integer.parseInt(args[m].substring(1)));
+//									}
+//									else if (args[m].charAt(0) == 'i') {
+//										((ArenaInstance)game).setStartingIncome(Integer.parseInt(args[m].substring(1)));
+//									}
+//									else {
+//										sender.sendMessage(ChatColor.RED + "Invalid Flag.");
+//										return (true);
+//									}
+//								}
+//								catch (NumberFormatException e) {
+//									sender.sendMessage(ChatColor.RED + "Invalid balance or income value.");
+//									return (true);
+//								}
+//							}
+//						}
+//					}
+//					catch (IOException e) {
+//						e.printStackTrace();
+//						sender.sendMessage(ChatColor.RED + "Unexpected error loading map.");
+//						return (true);
+//					}
+//				}
+//				else {
+//					sender.sendMessage(ChatColor.RED + "Unknown game mode.");
+//					return (true);
+//				}
 				
 				game.generate();
 				game.begin();
