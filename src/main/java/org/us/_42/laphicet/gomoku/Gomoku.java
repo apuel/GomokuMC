@@ -28,7 +28,7 @@ public class Gomoku implements Cloneable {
 		}
 	}
 	
-	private static class Token {
+	private static class Token implements Cloneable {
 		private int[] adjacent = new int[Alignment.values().length];
 		private final int value;
 		
